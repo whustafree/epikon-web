@@ -28,8 +28,8 @@ var CONFIG = {
         instagramFeed: {
             activo: true,
             posts: [
-                { activo: true, link: "https://instagram.com/epikon.cl", foto: "ded.mp4" },
-                { activo: true, link: "https://instagram.com", foto: "eve.mp4" },
+                { activo: true, link: "https://instagram.com/epikon.cl", foto: "https://res.cloudinary.com/dsv355n8b/video/upload/v1770244668/ded_oraopx.mp4" },
+                { activo: true, link: "https://instagram.com", foto: "https://res.cloudinary.com/dsv355n8b/video/upload/v1770244096/eve_wu2bum.mp4" },
                 { activo: false, link: "https://instagram.com", foto: "https://images.unsplash.com/photo-1560252829-80e7543d9020?w=500" },
                 { activo: false, link: "https://instagram.com", foto: "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=500" }
             ]
