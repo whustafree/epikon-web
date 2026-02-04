@@ -91,6 +91,55 @@ header::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; 
 .lightbox img { max-width:90%; max-height:90%; border-radius:10px; box-shadow:0 0 30px var(--neon-color); }
 .lightbox-close { position:absolute; top:20px; right:20px; color:white; font-size:2rem; cursor:pointer; }
 
+/* --- MASCOTA GUÍA (NUEVO) --- */
+        .mascot-container {
+            position: fixed;
+            bottom: 150px; /* Arriba del menú y la música */
+            right: 15px;
+            z-index: 1900; /* Por debajo del lightbox pero encima del contenido */
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            pointer-events: none; /* Para que no bloquee clicks debajo */
+            filter: drop-shadow(0 5px 15px rgba(0, 255, 204, 0.3));
+        }
+
+        .mascot-img {
+            width: 120px; /* Ajusta el tamaño de tu PNG aquí */
+            height: auto;
+            animation: floatMascot 6s ease-in-out infinite;
+            pointer-events: auto; /* Para poder hacerle click si quisiéramos a futuro */
+            cursor: help;
+        }
+
+        .mascot-bubble {
+            background: var(--card-bg);
+            border: 2px solid var(--neon-color);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            border-bottom-right-radius: 0; /* Efecto de "bocadillo" de cómic */
+            margin-bottom: 10px;
+            max-width: 200px;
+            font-size: 0.85rem;
+            text-align: right;
+            opacity: 0; /* Empieza invisible */
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+            pointer-events: auto;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+
+        .mascot-bubble.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @keyframes floatMascot {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+    
 /* --- MUSIC & INSTALL --- */
 .music-player { position: fixed; bottom: 85px; right: 20px; z-index: 90; background: rgba(0,0,0,0.8); border: 1px solid var(--neon-color); border-radius: 50px; padding: 10px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); }
 .music-disc { font-size: 1.5rem; animation: spin 3s linear infinite; animation-play-state: paused; }
