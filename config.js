@@ -7,7 +7,7 @@ var CONFIG = {
     // 1. IMÁGENES
     imagenes: {
         logo: "portada.png",
-        fondos: ["portada.png"] // Asegúrate de que este archivo exista, en tu código anterior decía "fondo.png"
+        fondos: ["fondo.png"] // Asegúrate de que este archivo exista, en tu código anterior decía "fondo.png"
     },
 
     // 2. EVENTO PRINCIPAL
