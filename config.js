@@ -117,7 +117,7 @@ var CONFIG = {
     // Un personaje que flota en la esquina y da consejos.
     mascota: {
         activo: true, // Si te aburre, pones false y desaparece.
-        imagenPng: "Mascota.png", // <-- ¡CAMBIA ESTO POR EL LINK DE TU PNG!
+        imagenPng: "mascota.png", // <-- ¡CAMBIA ESTO POR EL LINK DE TU PNG!
         frases: [
             "¡Hola! Soy tu guía geek. 👋",
             "¿Viste las fotos? ¡Abre la pestaña GALERÍA! 📸",
