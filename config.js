@@ -13,14 +13,14 @@ var CONFIG = {
     // 2. EVENTO PRINCIPAL
     evento: {
         activo: true,
-        titulo: "EPIKON 2026: Summer Edition",
-        flyer: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800",
+        titulo: "EPIKON 2025: Expreso Magico",
+        flyer: "flayer.jpg",
         descripcion: "¡Vuelve el evento geek más grande! Torneos, Cosplay, Stands y más.",
-        cronograma: "12:00 Apertura | 15:00 Concurso Cosplay | 18:00 Torneo Valorant",
-        ubicacion: "Gimnasio Municipal, Rancagua",
-        mapaLink: "https://goo.gl/maps/Ejemplo",
-        fechaInicio: "2026-03-15T12:00:00",
-        fechaFin: "2026-03-15T20:00:00"
+        cronograma: "12:00 Apertura | 18:00 Concurso Cosplay | 19:00 Termino,
+        ubicacion: "Open PLaza, Rancagua",
+        mapaLink: "https://maps.app.goo.gl/jctHr55nQnFDVYDm6",
+        fechaInicio: "2025-11-1T12:00:00",
+        fechaFin: "2025-11-2T19:00:00"
     },
 
     // 3. SOCIAL & COMUNIDAD
