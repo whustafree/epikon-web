@@ -93,57 +93,63 @@
 
         /* --- MASCOTA GUÍA --- */
         .mascot-container {
-            position: fixed;
-            bottom: 150px; /* Arriba del menú y la música */
-            right: 15px;
-            z-index: 1900; /* Por debajo del lightbox pero encima del contenido */
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            pointer-events: none; /* Para que no bloquee clicks debajo */
-            filter: drop-shadow(0 5px 15px rgba(0, 255, 204, 0.3));
+            position: fixed; bottom: 150px; right: 15px; z-index: 1900;
+            display: flex; flex-direction: column; align-items: flex-end;
+            pointer-events: none; transition: transform 0.3s ease;
         }
-
         .mascot-img {
-            width: 120px; /* Ajusta el tamaño de tu PNG aquí */
-            height: auto;
-            animation: floatMascot 6s ease-in-out infinite;
-            pointer-events: auto; /* Para poder hacerle click si quisiéramos a futuro */
-            cursor: help;
+            width: 120px; height: auto; animation: floatMascot 6s ease-in-out infinite;
+            pointer-events: auto; cursor: help;
         }
-
         .mascot-bubble {
-            background: var(--card-bg);
-            border: 2px solid var(--neon-color);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 15px;
-            border-bottom-right-radius: 0; /* Efecto de "bocadillo" de cómic */
-            margin-bottom: 10px;
-            max-width: 200px;
-            font-size: 0.85rem;
-            text-align: right;
-            opacity: 0; /* Empieza invisible */
-            transform: translateY(20px);
-            transition: all 0.5s ease;
-            pointer-events: auto;
-            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+            background: var(--card-bg); border: 2px solid var(--neon-color); color: white;
+            padding: 10px 15px; border-radius: 15px; border-bottom-right-radius: 0;
+            margin-bottom: 10px; max-width: 200px; font-size: 0.85rem; text-align: right;
+            opacity: 0; transform: translateY(20px); transition: all 0.5s ease;
+            pointer-events: auto; box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+            position: relative;
+        }
+        .mascot-bubble.show { opacity: 1; transform: translateY(0); }
+        
+        /* Botón cerrar mascota */
+        .mascot-close {
+            position: absolute; top: -10px; right: -10px;
+            background: var(--neon-pink); color: white; width: 20px; height: 20px;
+            border-radius: 50%; font-size: 12px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: none; font-weight: bold;
+        }
+        /* Botón para restaurar mascota */
+        .mascot-restore {
+            position: fixed; bottom: 150px; right: 10px; z-index: 1900;
+            width: 40px; height: 40px; background: var(--card-bg); border: 2px solid var(--neon-color);
+            border-radius: 50%; display: none; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 0 10px var(--neon-color);
         }
 
-        .mascot-bubble.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        @keyframes floatMascot { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
 
-        @keyframes floatMascot {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
+        /* --- MUSIC & INSTALL (ACTUALIZADO CON MINIMIZAR) --- */
+        .music-player { 
+            position: fixed; bottom: 85px; right: 20px; z-index: 90; 
+            background: rgba(0,0,0,0.8); border: 1px solid var(--neon-color); border-radius: 50px; 
+            padding: 10px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); 
+            transition: width 0.3s, padding 0.3s; overflow: hidden; max-width: 300px;
         }
-
-        /* --- MUSIC & INSTALL --- */
-        .music-player { position: fixed; bottom: 85px; right: 20px; z-index: 90; background: rgba(0,0,0,0.8); border: 1px solid var(--neon-color); border-radius: 50px; padding: 10px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); }
-        .music-disc { font-size: 1.5rem; animation: spin 3s linear infinite; animation-play-state: paused; }
+        .music-disc { font-size: 1.5rem; animation: spin 3s linear infinite; animation-play-state: paused; min-width: 24px;}
         .music-player.playing .music-disc { animation-play-state: running; }
+        
+        /* Estado minimizado música */
+        .music-player.minimized { width: 45px; padding: 10px; justify-content: center; }
+        .music-player.minimized span, 
+        .music-player.minimized #play-icon,
+        .music-player.minimized .music-minimize-btn { display: none; }
+        
+        /* Botón minimizar música */
+        .music-minimize-btn {
+            background: none; border: none; color: #aaa; cursor: pointer; font-size: 0.8rem; margin-left: 5px;
+        }
+        .music-minimize-btn:hover { color: white; }
+
         @keyframes spin { 100% { transform: rotate(360deg); } }
         .install-btn { display: none; background: var(--neon-pink); color: white; border: none; padding: 10px 20px; border-radius: 30px; font-weight: bold; margin: 20px auto; animation: pulse 2s infinite; cursor: pointer; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); box-shadow: 0 0 15px var(--neon-pink); } 100% { transform: scale(1); } }
@@ -173,14 +179,21 @@
     <header id="main-header"><img src="" class="main-logo" id="dynamic-logo" alt="Logo Epikon"></header>
 
     <div id="mascot-container" class="mascot-container" style="display: none;">
-        <div id="mascot-bubble" class="mascot-bubble">...</div>
+        <div id="mascot-bubble" class="mascot-bubble">
+            <span id="mascot-text">...</span>
+            <button class="mascot-close" onclick="toggleMascot(false)">×</button>
+        </div>
         <img id="mascot-img" class="mascot-img" src="" alt="Guía Epikon">
     </div>
+    <button id="mascot-restore" class="mascot-restore" onclick="toggleMascot(true)">
+        <i class="fas fa-robot" style="color:var(--neon-color)"></i>
+    </button>
 
-    <div class="music-player" id="music-player" onclick="toggleMusic()">
+    <div class="music-player" id="music-player" onclick="toggleMusic(event)">
         <i class="fas fa-compact-disc music-disc" style="color:var(--neon-color)"></i>
         <span style="font-size:0.8rem; font-weight:bold;">LOFI</span>
         <i class="fas fa-play" id="play-icon" style="font-size:0.8rem; margin-left:5px;"></i>
+        <button class="music-minimize-btn" onclick="toggleMusicSize(event)"><i class="fas fa-compress-alt"></i></button>
         <audio id="audio-stream" preload="none"></audio>
     </div>
 
@@ -263,7 +276,7 @@
             initMascot(); 
         }
 
-        // --- MASCOTA GUÍA (MOVIDO A NIVEL PRINCIPAL) ---
+        // --- MASCOTA GUÍA ---
         let mascotInterval;
         function initMascot() {
             if(!CONFIG.mascota || !CONFIG.mascota.activo || !CONFIG.mascota.imagenPng) return;
@@ -271,6 +284,7 @@
             const container = document.getElementById('mascot-container');
             const img = document.getElementById('mascot-img');
             const bubble = document.getElementById('mascot-bubble');
+            const textSpan = document.getElementById('mascot-text');
             const frases = CONFIG.mascota.frases || ["¡Hola!"];
             let fraseIdx = 0;
 
@@ -278,19 +292,32 @@
             container.style.display = 'flex';
 
             const cyclePhrase = () => {
+                if(container.style.display === 'none') return; // No cambiar texto si está oculta
                 bubble.classList.remove('show'); 
                 setTimeout(() => {
                     fraseIdx = (fraseIdx + 1) % frases.length;
-                    bubble.innerText = frases[fraseIdx];
+                    textSpan.innerText = frases[fraseIdx];
                     bubble.classList.add('show'); 
                 }, 1000); 
             };
 
-            bubble.innerText = frases[0];
+            textSpan.innerText = frases[0];
             setTimeout(()=> bubble.classList.add('show'), 1000);
 
             if(frases.length > 1) {
                 mascotInterval = setInterval(cyclePhrase, CONFIG.mascota.tiempoEntreFrases || 8000);
+            }
+        }
+
+        function toggleMascot(show) {
+            const container = document.getElementById('mascot-container');
+            const restoreBtn = document.getElementById('mascot-restore');
+            if(show) {
+                container.style.display = 'flex';
+                restoreBtn.style.display = 'none';
+            } else {
+                container.style.display = 'none';
+                restoreBtn.style.display = 'flex';
             }
         }
 
@@ -341,7 +368,31 @@
         // --- UI FUNCS ---
         function switchTab(t, btn) { document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); btn.classList.add('active'); window.scrollTo({top:0, behavior:'smooth'}); }
         function openInstagram() { window.open(CONFIG.redes.instagram || '#', '_blank'); }
-        function toggleMusic() { const audio = document.getElementById('audio-stream'); const player = document.getElementById('music-player'); const icon = document.getElementById('play-icon'); if (audio.paused) { audio.play(); player.classList.add('playing'); icon.classList.replace('fa-play', 'fa-pause'); } else { audio.pause(); player.classList.remove('playing'); icon.classList.replace('fa-pause', 'fa-play'); } }
+        
+        // --- LOGICA DE MUSICA ACTUALIZADA ---
+        function toggleMusic(event) {
+            // Si el click fue en el botón de minimizar, no hacemos toggle
+            if(event && event.target.closest('.music-minimize-btn')) return;
+
+            const audio = document.getElementById('audio-stream');
+            const player = document.getElementById('music-player');
+            const icon = document.getElementById('play-icon');
+            
+            // Si está minimizado y haces click, lo maximiza en vez de reproducir
+            if(player.classList.contains('minimized')) {
+                toggleMusicSize(event);
+                return;
+            }
+
+            if (audio.paused) { audio.play(); player.classList.add('playing'); icon.classList.replace('fa-play', 'fa-pause'); } 
+            else { audio.pause(); player.classList.remove('playing'); icon.classList.replace('fa-pause', 'fa-play'); }
+        }
+
+        function toggleMusicSize(event) {
+            if(event) event.stopPropagation(); // Evitar que se reproduzca/pause al minimizar
+            const player = document.getElementById('music-player');
+            player.classList.toggle('minimized');
+        }
 
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
