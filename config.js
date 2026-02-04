@@ -1,5 +1,5 @@
 /* 🎛️ CENTRO DE CONTROL - EPIKON
- * Configuración Actualizada: Staff, Guías y Galería.
+ * Configuración Actualizada: Staff, Guías, Galería y Mascota.
  */
 
 var CONFIG = {
@@ -7,7 +7,7 @@ var CONFIG = {
     // 1. IMÁGENES
     imagenes: {
         logo: "portada.png",
-        fondos: ["fondo.png"] // Asegúrate de que este archivo exista, en tu código anterior decía "fondo.png"
+        fondos: ["fondo.png"] 
     },
 
     // 2. EVENTO PRINCIPAL
@@ -35,7 +35,7 @@ var CONFIG = {
             ]
         },
 
-        // --- 🛡️ EQUIPO / STAFF (ACTUALIZADO) ---
+        // --- 🛡️ EQUIPO / STAFF ---
         equipo: {
             activo: true,
             titulo: "🛡️ Staff Epikon",
@@ -70,7 +70,7 @@ var CONFIG = {
             imgPremio: "https://images.unsplash.com/photo-1527814050087-3793815479db?w=500"
         },
 
-        // --- ℹ️ GUÍA DE COMUNIDAD (ACTUALIZADO) ---
+        // --- ℹ️ GUÍA DE COMUNIDAD ---
         infoComunidad: {
             activo: true,
             titulo: "📘 Guía de la Comunidad",
@@ -88,8 +88,7 @@ var CONFIG = {
             ]
         },
 
-        // --- 📸 GALERÍA COMPLETA (MIGRADA) ---
-        // Necesaria para que funcione la pestaña "Galería"
+        // --- 📸 GALERÍA COMPLETA ---
         galeriaCompleta: {
             activo: true,
             actual: [
@@ -109,15 +108,12 @@ var CONFIG = {
 
     // 4. EXTRAS
     redes: { instagram: "https://www.instagram.com/epikon.cl" },
-    musica: { streamUrl: "https://stream.zeno.fm/0r0xa792kwzuv" }
-};
-// ... (después de redes y musica) ...
+    musica: { streamUrl: "https://stream.zeno.fm/0r0xa792kwzuv" },
 
-    // 5. MASCOTA GUÍA (NUEVO)
-    // Un personaje que flota en la esquina y da consejos.
+    // 5. MASCOTA GUÍA
     mascota: {
-        activo: true, // Si te aburre, pones false y desaparece.
-        imagenPng: "mascota.png", // <-- ¡CAMBIA ESTO POR EL LINK DE TU PNG!
+        activo: true,
+        imagenPng: "mascota.png",
         frases: [
             "¡Hola! Soy tu guía geek. 👋",
             "¿Viste las fotos? ¡Abre la pestaña GALERÍA! 📸",
@@ -126,9 +122,6 @@ var CONFIG = {
             "¡Sube el volumen a la radio Lofi! 🎵",
             "¿Dudas sobre cosplay? Revisa la Guía en Comunidad. 📘"
         ],
-        tiempoEntreFrases: 8000 // Cada cuántos milisegundos cambia la frase (8000ms = 8 segundos)
+        tiempoEntreFrases: 8000
     }
-
-// ¡IMPORTANTE! Asegúrate de que la línea anterior a esto (la de música) tenga una coma al final:
-// musica: { streamUrl: "..." },  <--- ESA COMA
 };
