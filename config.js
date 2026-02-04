@@ -19,8 +19,8 @@ var CONFIG = {
         cronograma: "12:00 Apertura | 18:00 Concurso Cosplay | 19:00 Termino.",
         ubicacion: "Open PLaza, Rancagua",
         mapaLink: "https://maps.app.goo.gl/jctHr55nQnFDVYDm6",
-        fechaInicio: "2025-11-1T12:00:00",
-        fechaFin: "2025-11-2T19:00:00"
+fechaInicio: "2025-11-01T12:00:00", // Agregamos el 0
+fechaFin: "2025-11-02T19:00:00"    // Agregamos el 0
     },
 
     // 3. SOCIAL & COMUNIDAD
