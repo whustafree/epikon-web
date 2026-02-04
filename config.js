@@ -111,3 +111,24 @@ var CONFIG = {
     redes: { instagram: "https://www.instagram.com/epikon.cl" },
     musica: { streamUrl: "https://stream.zeno.fm/0r0xa792kwzuv" }
 };
+// ... (después de redes y musica) ...
+
+    // 5. MASCOTA GUÍA (NUEVO)
+    // Un personaje que flota en la esquina y da consejos.
+    mascota: {
+        activo: true, // Si te aburre, pones false y desaparece.
+        imagenPng: "https://placehold.co/150x200/png?text=MascotaPNG", // <-- ¡CAMBIA ESTO POR EL LINK DE TU PNG!
+        frases: [
+            "¡Hola! Soy tu guía geek. 👋",
+            "¿Viste las fotos? ¡Abre la pestaña GALERÍA! 📸",
+            "Si quieres conocer al Staff, ve a COMUNIDAD. 🛡️",
+            "¡No olvides revisar los Juegos Gratis en Inicio! 🎁",
+            "¡Sube el volumen a la radio Lofi! 🎵",
+            "¿Dudas sobre cosplay? Revisa la Guía en Comunidad. 📘"
+        ],
+        tiempoEntreFrases: 8000 // Cada cuántos milisegundos cambia la frase (8000ms = 8 segundos)
+    }
+
+// ¡IMPORTANTE! Asegúrate de que la línea anterior a esto (la de música) tenga una coma al final:
+// musica: { streamUrl: "..." },  <--- ESA COMA
+};
