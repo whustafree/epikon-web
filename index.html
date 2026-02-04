@@ -259,6 +259,7 @@ function initApp() {
     loadAllContent();
     loadSocialContent();
     loadGallery('actual'); // Carga inicial de galería
+    initMascot(); // <--- AGREGA ESTA LÍNEA
 }
 
 // --- GALERÍA (NUEVO) ---
@@ -397,6 +398,39 @@ function loadSocialContent() {
     if(CONFIG.social.cosplayGallery && CONFIG.social.cosplayGallery.activo) {
         document.getElementById('cosplay-grid').innerHTML = CONFIG.social.cosplayGallery.list.filter(i=>i.activo).map(item => `<div class="card"><img src="${item.foto}" class="card-thumb" style="height:300px;"><div class="card-content"><span style="font-weight:bold">${item.usuario}</span><a href="${item.url}" target="_blank" class="btn-action">SEGUIR</a></div></div>`).join('');
     }
+    // 4 --- MASCOTA GUÍA ---
+        let mascotInterval;
+        function initMascot() {
+            if(!CONFIG.mascota || !CONFIG.mascota.activo || !CONFIG.mascota.imagenPng) return;
+
+            const container = document.getElementById('mascot-container');
+            const img = document.getElementById('mascot-img');
+            const bubble = document.getElementById('mascot-bubble');
+            const frases = CONFIG.mascota.frases || ["¡Hola!"];
+            let fraseIdx = 0;
+
+            img.src = CONFIG.mascota.imagenPng;
+            container.style.display = 'flex';
+
+            // Función para cambiar la frase
+            const cyclePhrase = () => {
+                bubble.classList.remove('show'); // Ocultar
+                setTimeout(() => {
+                    fraseIdx = (fraseIdx + 1) % frases.length;
+                    bubble.innerText = frases[fraseIdx];
+                    bubble.classList.add('show'); // Mostrar
+                }, 1000); // Espera 1 seg mientras está oculto para cambiar el texto
+            };
+
+            // Primera frase inmediata
+            bubble.innerText = frases[0];
+            setTimeout(()=> bubble.classList.add('show'), 1000);
+
+            // Iniciar ciclo
+            if(frases.length > 1) {
+                mascotInterval = setInterval(cyclePhrase, CONFIG.mascota.tiempoEntreFrases || 8000);
+            }
+        }
 }
 
 function startTimer(f) { const end = new Date(f).getTime(); setInterval(()=>{ const d = end - new Date().getTime(); if(d<0) return; const days=Math.floor(d/(1000*60*60*24)); const hours=Math.floor((d%(1000*60*60*24))/(1000*60*60)); const mins=Math.floor((d%(1000*60*60))/(1000*60)); const t=document.getElementById('timer'); if(t) t.innerText=`${days}d ${hours}h ${mins}m`; },1000); }
