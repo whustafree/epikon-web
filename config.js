@@ -16,7 +16,7 @@ var CONFIG = {
         titulo: "EPIKON 2025: Expreso Magico",
         flyer: "flayer.jpg",
         descripcion: "¡Vuelve el evento geek más grande! Torneos, Cosplay, Stands y más.",
-        cronograma: "12:00 Apertura | 18:00 Concurso Cosplay | 19:00 Termino,
+        cronograma: "12:00 Apertura | 18:00 Concurso Cosplay | 19:00 Termino.",
         ubicacion: "Open PLaza, Rancagua",
         mapaLink: "https://maps.app.goo.gl/jctHr55nQnFDVYDm6",
         fechaInicio: "2025-11-1T12:00:00",
