@@ -2,11 +2,12 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>EPIKON - Comunidad Geek Rancagua</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <link rel="apple-touch-icon" href="mascota.png"> ```
+    <link rel="apple-touch-icon" href="mascota.png">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="config.js"></script>
 
@@ -20,7 +21,8 @@
             --safe-bottom: env(safe-area-inset-bottom);
         }
         
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; cursor: crosshair; }
+        /* CORREGIDO: Eliminado cursor: crosshair para mejorar UX */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
         body { 
             font-family: 'Segoe UI', sans-serif; 
@@ -52,10 +54,10 @@
         }
         .event-flyer { 
             width: 100%; 
-            height: auto; /* <--- ESTO ES LA CLAVE */
+            height: auto; 
             display: block; 
-            max-height: 600px; /* Opcional: evita que una imagen vertical ocupe toda la pantalla */
-            object-fit: contain; /* Asegura que se vea entera si llega al límite de altura */
+            max-height: 600px; 
+            object-fit: contain; 
         }
         .event-details { padding: 20px; }
         .event-title { color: var(--neon-color); font-size: 1.8rem; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; line-height: 1.1; }
@@ -119,7 +121,6 @@
         }
         .mascot-bubble.show { opacity: 1; transform: translateY(0); }
         
-        /* Botón cerrar mascota */
         .mascot-close {
             position: absolute; top: -10px; right: -10px;
             background: var(--neon-pink); color: white; width: 20px; height: 20px;
@@ -127,7 +128,6 @@
             cursor: pointer; border: none; font-weight: bold;
         }
         
-        /* Botón para restaurar mascota (Ahora con imagen) */
         .mascot-restore {
             position: fixed; bottom: 150px; right: 10px; z-index: 1900;
             width: 50px; height: 50px; 
@@ -143,11 +143,13 @@
         @keyframes floatMascot { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
 
         /* --- MUSIC & INSTALL --- */
+        /* CORREGIDO: cursor pointer añadido explícitamente solo aquí */
         .music-player { 
             position: fixed; bottom: 85px; right: 20px; z-index: 90; 
             background: rgba(0,0,0,0.8); border: 1px solid var(--neon-color); border-radius: 50px; 
             padding: 10px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); 
             transition: width 0.3s, padding 0.3s; overflow: hidden; max-width: 300px;
+            cursor: pointer; 
         }
         .music-disc { font-size: 1.5rem; animation: spin 3s linear infinite; animation-play-state: paused; min-width: 24px;}
         .music-player.playing .music-disc { animation-play-state: running; }
@@ -202,7 +204,7 @@
         <img id="mascot-restore-img" src="" alt="Mascota">
     </button>
 
-    <div class="music-player" id="music-player" onclick="toggleMusic(event)">
+    <div class="music-player" id="music-player" onclick="toggleMusic(event)" role="button" tabindex="0" onkeypress="if(event.key==='Enter') toggleMusic(event)">
         <i class="fas fa-compact-disc music-disc" style="color:var(--neon-color)"></i>
         <span style="font-size:0.8rem; font-weight:bold;">LOFI</span>
         <i class="fas fa-play" id="play-icon" style="font-size:0.8rem; margin-left:5px;"></i>
@@ -265,6 +267,15 @@
     </nav>
 
     <script>
+        // CORREGIDO: REGISTRO DEL SERVICE WORKER (Para que la web sea instalable y offline)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('SW registrado', reg))
+                    .catch(err => console.error('Error SW', err));
+            });
+        }
+
         let animeOcultosGlobal = [];
         let allLoadedGames = [];
         let deferredPrompt;
@@ -296,7 +307,7 @@
 
             const container = document.getElementById('mascot-container');
             const img = document.getElementById('mascot-img');
-            const restoreImg = document.getElementById('mascot-restore-img'); // IMAGEN DEL BOTÓN PEQUEÑO
+            const restoreImg = document.getElementById('mascot-restore-img'); 
             
             const bubble = document.getElementById('mascot-bubble');
             const textSpan = document.getElementById('mascot-text');
@@ -304,7 +315,7 @@
             let fraseIdx = 0;
 
             img.src = CONFIG.mascota.imagenPng;
-            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN
+            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; 
 
             container.style.display = 'flex';
 
@@ -496,7 +507,14 @@
         function startTimer(f) { const end = new Date(f).getTime(); setInterval(()=>{ const d = end - new Date().getTime(); if(d<0) return; const days=Math.floor(d/(1000*60*60*24)); const hours=Math.floor((d%(1000*60*60*24))/(1000*60*60)); const mins=Math.floor((d%(1000*60*60))/(1000*60)); const t=document.getElementById('timer'); if(t) t.innerText=`${days}d ${hours}h ${mins}m`; },1000); }
         function initBackgroundSlider() { const bgs = (CONFIG.imagenes && CONFIG.imagenes.fondos) ? CONFIG.imagenes.fondos : []; let idx=0; const h=document.getElementById('main-header'); if(bgs.length>0) { h.style.backgroundImage=`url('${bgs[0]}')`; if(bgs.length>1) setInterval(()=>{ idx=(idx+1)%bgs.length; h.style.backgroundImage=`url('${bgs[idx]}')`; }, 6000); } }
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; const btn = document.getElementById('btn-install'); btn.style.display = 'block'; btn.addEventListener('click', () => { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choice) => { if (choice.outcome === 'accepted') btn.style.display = 'none'; deferredPrompt = null; }); }); });
-        function initParticles() { const canvas = document.getElementById('particles-canvas'); const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particlesArray = []; class Particle { constructor(){ this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height; this.size=Math.random()*2; this.speedY=Math.random()*1; } update(){ this.y-=this.speedY; if(this.y<0){ this.y=canvas.height; this.x=Math.random()*canvas.width; } } draw(){ ctx.fillStyle='rgba(0, 255, 204, 0.5)'; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); } } for(let i=0; i<50; i++) particlesArray.push(new Particle()); function animate(){ ctx.clearRect(0,0,canvas.width,canvas.height); for(let i=0; i<particlesArray.length; i++){ particlesArray[i].update(); particlesArray[i].draw(); } requestAnimationFrame(animate); } animate(); window.addEventListener('resize', ()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }); }
+        
+        // CORREGIDO: Pausa animación si la pestaña no se ve (ahorro batería)
+        function initParticles() { const canvas = document.getElementById('particles-canvas'); const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particlesArray = []; class Particle { constructor(){ this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height; this.size=Math.random()*2; this.speedY=Math.random()*1; } update(){ this.y-=this.speedY; if(this.y<0){ this.y=canvas.height; this.x=Math.random()*canvas.width; } } draw(){ ctx.fillStyle='rgba(0, 255, 204, 0.5)'; ctx.beginPath(); ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); } } for(let i=0; i<50; i++) particlesArray.push(new Particle()); 
+        function animate(){ 
+            if(document.hidden) { requestAnimationFrame(animate); return; } // Pausa
+            ctx.clearRect(0,0,canvas.width,canvas.height); for(let i=0; i<particlesArray.length; i++){ particlesArray[i].update(); particlesArray[i].draw(); } requestAnimationFrame(animate); 
+        } 
+        animate(); window.addEventListener('resize', ()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }); }
     </script>
 </body>
 </html>
