@@ -1,35 +1,38 @@
-const CACHE_NAME = "epikon-v2"; // Versión 2
-const ASSETS_TO_CACHE = [
-  "./",
-"./index.html",
-"./config.js",
-"./portada.png",
-"./manifest.json",
-"./favicon.png",
-"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+const CACHE_NAME = 'epikon-v1';
+const ASSETS = [
+  './',
+  './index.html',
+  './config.js',
+  './manifest.json',
+  './mascota.png' 
 ];
 
-self.addEventListener("install", (e) => {
+// Instalación del Service Worker
+self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      return cache.addAll(ASSETS);
     })
   );
 });
 
-self.addEventListener("activate", (e) => {
+// Activación y limpieza de caches viejas
+self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.keys().then((keys) => {
+    caches.keys().then((keyList) => {
       return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) return caches.delete(key);
+        keyList.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
         })
       );
     })
   );
 });
 
-self.addEventListener("fetch", (e) => {
+// Interceptar peticiones (Modo Offline básico)
+self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((response) => {
       return response || fetch(e.request);

@@ -1,18 +1,19 @@
 {
-  "name": "EPIKON Comunidad Geek",
+  "name": "EPIKON - Comunidad Geek",
   "short_name": "EPIKON",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0f0f15",
   "theme_color": "#00ffcc",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "favicon.png",
+      "src": "mascota.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "favicon.png",
+      "src": "mascota.png",
       "sizes": "512x512",
       "type": "image/png"
     }
