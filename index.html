@@ -433,8 +433,18 @@
                 allLoadedGames = d; 
                 renderGames(d.slice(0, 4));
             } catch(e) { 
-                document.getElementById('games-container').innerHTML = "<p>Intenta recargar la página.</p>"; 
-            }
+    console.error("Bloqueo por DNS/Adblock:", e);
+    document.getElementById('games-container').innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 20px; border: 1px dashed #ff5555; border-radius: 10px;">
+            <i class="fas fa-shield-alt" style="font-size: 2rem; color: #ff5555; margin-bottom: 10px;"></i>
+            <h3 style="margin: 5px 0; color: #ff5555;">Bloqueador Detectado</h3>
+            <p style="color: #ccc; font-size: 0.9rem;">Tu DNS o Adblock impide cargar la lista automática.</p>
+            <a href="https://www.gamerpower.com/giveaways" target="_blank" class="btn-action" style="display: inline-block; width: auto; padding: 10px 30px; margin-top: 10px; background: var(--neon-pink); color: white; border: none;">
+                VER JUEGOS EN WEB EXTERNA <i class="fas fa-external-link-alt"></i>
+            </a>
+        </div>
+    `; 
+}
         }
 
         function renderGames(games) { document.getElementById('games-container').innerHTML = games.map(g => `<div class="card"><img src="${g.image}" class="card-thumb" onerror="this.src='https://placehold.co/600x400/1a1a24/00ffcc?text=Game'"><div class="card-content"><div style="font-weight:bold; margin-bottom:10px;">${g.title}</div><div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">${g.platforms}</div><a href="${g.open_giveaway_url}" target="_blank" class="btn-action">GRATIS</a></div></div>`).join(''); }
