@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EPIKON - Comunidad Geek Rancagua</title>
+
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <link rel="apple-touch-icon" href="mascota.png"> ```
+    <link rel="apple-touch-icon" href="mascota.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="config.js"></script>
 
@@ -52,10 +53,10 @@
         }
         .event-flyer { 
             width: 100%; 
-            height: auto; /* <--- ESTO ES LA CLAVE */
+            height: auto; 
             display: block; 
-            max-height: 600px; /* Opcional: evita que una imagen vertical ocupe toda la pantalla */
-            object-fit: contain; /* Asegura que se vea entera si llega al límite de altura */
+            max-height: 600px; 
+            object-fit: contain; 
         }
         .event-details { padding: 20px; }
         .event-title { color: var(--neon-color); font-size: 1.8rem; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; line-height: 1.1; }
@@ -276,6 +277,14 @@
         });
 
         function initApp() {
+            // --- CÓDIGO DE INSTALACIÓN (SERVICE WORKER) ---
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('Service Worker Registrado'))
+                    .catch(err => console.error('Error SW:', err));
+            }
+            // ---------------------------------------------
+
             const logoEl = document.getElementById('dynamic-logo');
             if(CONFIG.imagenes && CONFIG.imagenes.logo) logoEl.src = CONFIG.imagenes.logo;
             logoEl.onload = () => logoEl.classList.add('loaded');
@@ -296,7 +305,7 @@
 
             const container = document.getElementById('mascot-container');
             const img = document.getElementById('mascot-img');
-            const restoreImg = document.getElementById('mascot-restore-img'); // IMAGEN DEL BOTÓN PEQUEÑO
+            const restoreImg = document.getElementById('mascot-restore-img'); 
             
             const bubble = document.getElementById('mascot-bubble');
             const textSpan = document.getElementById('mascot-text');
@@ -304,7 +313,7 @@
             let fraseIdx = 0;
 
             img.src = CONFIG.mascota.imagenPng;
-            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN
+            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng;
 
             container.style.display = 'flex';
 
@@ -386,7 +395,6 @@
         function switchTab(t, btn) { document.querySelectorAll('.tab-content').forEach(e=>e.classList.remove('active')); document.querySelectorAll('.nav-item').forEach(e=>e.classList.remove('active')); document.getElementById('tab-'+t).classList.add('active'); btn.classList.add('active'); window.scrollTo({top:0, behavior:'smooth'}); }
         function openInstagram() { window.open(CONFIG.redes.instagram || '#', '_blank'); }
         
-        // --- LOGICA DE MUSICA ---
         function toggleMusic(event) {
             if(event && event.target.closest('.music-minimize-btn')) return;
 
@@ -414,14 +422,19 @@
         
         async function loadGames() {
             try {
+                // VOLVIMOS AL MÉTODO ORIGINAL (GamerPower con Proxy CodeTabs)
+                // Si el celular bloquea esto, deberías ver "Buscando regalos..." o error en consola, pero no rompe la página.
                 const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
                 const targetUrl = 'https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity';
+                
                 const r = await fetch(proxyUrl + encodeURIComponent(targetUrl));
                 if (!r.ok) throw new Error("Error Proxy");
+                
                 const d = await r.json();
                 allLoadedGames = d; 
                 renderGames(d.slice(0, 4));
             } catch(e) { 
+                // Mensaje simple si falla, sin romper nada
                 document.getElementById('games-container').innerHTML = "<p>Intenta recargar la página.</p>"; 
             }
         }
@@ -433,65 +446,6 @@
         function expandAnimeCalendar() { document.getElementById('anime-calendar-container').innerHTML += generateAnimeHTML(animeOcultosGlobal); document.getElementById('btn-expand-anime').style.display = 'none'; }
         function generateAnimeHTML(lista) { const dias = { "Mondays": "Lunes", "Tuesdays": "Martes", "Wednesdays": "Miércoles", "Thursdays": "Jueves", "Fridays": "Viernes", "Saturdays": "Sábados", "Sundays": "Domingos" }; return lista.map(a => `<div class="card"><img src="${a.images.jpg.large_image_url}" class="card-thumb"><div class="card-content"><div style="font-weight:bold; margin-bottom:5px;">${a.title}</div><div style="background:#333; padding:4px 10px; border-radius:20px; font-size:0.8rem; display:inline-block;"><i class="far fa-clock"></i> ${dias[a.broadcast.day] || 'Por definir'}</div><a href="${a.url}" target="_blank" class="btn-action">INFO</a></div></div>`).join(''); }
         async function loadRSSNews(u,id) { try { const r = await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(u)); const d = await r.json(); document.getElementById(id).innerHTML = d.items.slice(0,3).map(i=> { let img = i.thumbnail || (i.description.match(/<img[^>]+src="([^">]+)"/) || [])[1] || 'https://placehold.co/600x400/1a1a24/00ffcc?text=News'; return `<div class="card"><img src="${img}" class="card-thumb"><div class="card-content"><div style="font-weight:bold;margin-bottom:10px;">${i.title}</div><a href="${i.link}" target="_blank" class="btn-action">LEER</a></div></div>`; }).join(''); } catch(e){} }
-
-        // --- SOCIAL ---
-        function loadSocialContent() {
-            if(!CONFIG.social) return;
-
-            // 0. EQUIPO
-            const teamContainer = document.getElementById('team-grid');
-            const teamTitle = document.getElementById('team-title');
-            if(CONFIG.social.equipo && CONFIG.social.equipo.activo) {
-                teamTitle.innerText = CONFIG.social.equipo.titulo;
-                teamTitle.style.display = 'block';
-                teamContainer.innerHTML = CONFIG.social.equipo.miembros.filter(m => m.activo).map(m => `
-                    <div class="card" style="align-items:center; text-align:center;">
-                        <div style="padding:20px; display:flex; flex-direction:column; align-items:center;">
-                            <img src="${m.foto}" class="staff-photo" onerror="this.src='https://placehold.co/200x200?text=Staff'">
-                            <h3 style="margin:5px 0; color:white;">${m.nombre}</h3>
-                            <div class="staff-role">${m.rol}</div>
-                            <a href="${m.link}" target="_blank" class="btn-action" style="font-size:0.8rem;"><i class="fas fa-link"></i> CONECTAR</a>
-                        </div>
-                    </div>
-                `).join('');
-            } else { teamTitle.style.display = 'none'; }
-
-            // 5. GUÍA COMUNIDAD
-            if(CONFIG.social.infoComunidad && CONFIG.social.infoComunidad.activo) {
-                const infoSection = document.getElementById('community-info-section');
-                const data = CONFIG.social.infoComunidad;
-                let html = `<h2 class="section-title">${data.titulo}</h2>`;
-                html += `<div class="grid-base" style="margin-bottom: 30px;">`;
-                data.guias.filter(g => g.activo).forEach(g => {
-                    html += `<a href="${g.link}" class="card" style="flex: 1 1 150px; text-decoration:none; background: linear-gradient(45deg, #1a1a24, #2a0a38);"><div class="card-content" style="padding:20px; align-items:center;"><i class="${g.icono}" style="font-size: 2rem; color: var(--neon-color); margin-bottom: 10px;"></i><span style="font-weight:bold; color:white;">${g.titulo}</span></div></a>`;
-                });
-                html += `</div><div style="display:flex; flex-direction:column; gap:15px; max-width:800px; margin:0 auto;">`;
-                data.faq.forEach(f => {
-                    html += `<div style="background:var(--card-bg); border:1px solid #333; border-radius:10px; padding:15px; text-align:left;"><h4 style="color:var(--neon-color); margin:0 0 5px 0; font-size:1.1rem;"><i class="far fa-question-circle"></i> ${f.p}</h4><p style="color:#ccc; margin:0; font-size:0.95rem;">${f.r}</p></div>`;
-                });
-                html += `</div>`;
-                infoSection.innerHTML = html;
-            }
-
-            // 1. Instagram
-            if(CONFIG.social.instagramFeed && CONFIG.social.instagramFeed.activo) {
-                document.getElementById('insta-feed').innerHTML = CONFIG.social.instagramFeed.posts.filter(p=>p.activo).slice(0,4).map(post => {
-                    const isVideo = post.foto.endsWith('.mp4');
-                    const media = isVideo ? `<video src="${post.foto}" class="insta-video" autoplay loop muted playsinline></video>` : `<img src="${post.foto}" class="insta-img">`;
-                    return `<div class="insta-card">${media}<div class="insta-overlay"><i class="fab fa-instagram" style="font-size:2rem;"></i></div><a href="${post.link}" target="_blank" style="position:absolute; top:0; left:0; width:100%; height:100%"></a></div>`;
-                }).join('');
-            }
-            // 2. Sorteo
-            if(CONFIG.social.sorteo && CONFIG.social.sorteo.activo) {
-                const s = CONFIG.social.sorteo;
-                document.getElementById('sorteo-section').innerHTML = `<div class="sorteo-box"><img src="${s.imgPremio}" style="width:120px; height:120px; object-fit:cover; border-radius:10px;"><div><h3 style="margin:0; color:white;">${s.titulo}</h3><div class="sorteo-timer" id="timer">...</div><button class="btn-action" onclick="alert('¡Participando!')">PARTICIPAR</button></div></div>`;
-                startTimer(s.fechaTermino);
-            }
-            // 3. Cosplay
-            if(CONFIG.social.cosplayGallery && CONFIG.social.cosplayGallery.activo) {
-                document.getElementById('cosplay-grid').innerHTML = CONFIG.social.cosplayGallery.list.filter(i=>i.activo).map(item => `<div class="card"><img src="${item.foto}" class="card-thumb" style="height:300px;"><div class="card-content"><span style="font-weight:bold">${item.usuario}</span><a href="${item.url}" target="_blank" class="btn-action">SEGUIR</a></div></div>`).join('');
-            }
-        }
 
         function startTimer(f) { const end = new Date(f).getTime(); setInterval(()=>{ const d = end - new Date().getTime(); if(d<0) return; const days=Math.floor(d/(1000*60*60*24)); const hours=Math.floor((d%(1000*60*60*24))/(1000*60*60)); const mins=Math.floor((d%(1000*60*60))/(1000*60)); const t=document.getElementById('timer'); if(t) t.innerText=`${days}d ${hours}h ${mins}m`; },1000); }
         function initBackgroundSlider() { const bgs = (CONFIG.imagenes && CONFIG.imagenes.fondos) ? CONFIG.imagenes.fondos : []; let idx=0; const h=document.getElementById('main-header'); if(bgs.length>0) { h.style.backgroundImage=`url('${bgs[0]}')`; if(bgs.length>1) setInterval(()=>{ idx=(idx+1)%bgs.length; h.style.backgroundImage=`url('${bgs[idx]}')`; }, 6000); } }
