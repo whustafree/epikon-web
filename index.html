@@ -4,26 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EPIKON - Comunidad Geek Rancagua</title>
+
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <link rel="apple-touch-icon" href="mascota.png"> ```
-
-4.  Ahora, busca el final del archivo, dentro del `<script>`.
-5.  Busca la función `initApp()`.
-6.  Agrega la llamada al Service Worker al principio de la función, así:
-
-```javascript
-        function initApp() {
-            // --- REGISTRO DE PWA (NUEVO) ---
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('App lista para instalar'))
-                    .catch(err => console.error('Error SW:', err));
-            }
-            // -------------------------------
-
-            const logoEl = document.getElementById('dynamic-logo');
-            // ... (el resto de tu código sigue igual)
+    <link rel="apple-touch-icon" href="mascota.png">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="config.js"></script>
@@ -70,10 +54,10 @@
         }
         .event-flyer { 
             width: 100%; 
-            height: auto; /* <--- ESTO ES LA CLAVE */
+            height: auto; 
             display: block; 
-            max-height: 600px; /* Opcional: evita que una imagen vertical ocupe toda la pantalla */
-            object-fit: contain; /* Asegura que se vea entera si llega al límite de altura */
+            max-height: 600px; 
+            object-fit: contain; 
         }
         .event-details { padding: 20px; }
         .event-title { color: var(--neon-color); font-size: 1.8rem; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; line-height: 1.1; }
@@ -294,6 +278,14 @@
         });
 
         function initApp() {
+            // --- REGISTRO DE PWA (IMPORTANTE) ---
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(() => console.log('App lista para instalar'))
+                    .catch(err => console.error('Error SW:', err));
+            }
+            // ------------------------------------
+
             const logoEl = document.getElementById('dynamic-logo');
             if(CONFIG.imagenes && CONFIG.imagenes.logo) logoEl.src = CONFIG.imagenes.logo;
             logoEl.onload = () => logoEl.classList.add('loaded');
@@ -322,7 +314,7 @@
             let fraseIdx = 0;
 
             img.src = CONFIG.mascota.imagenPng;
-            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN
+            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN AL BOTÓN
 
             container.style.display = 'flex';
 
