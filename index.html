@@ -424,63 +424,28 @@
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
         
-  async function loadGames() {
+async function loadGames() {
             const container = document.getElementById('games-container');
             
-            // LISTA DE RESPALDO (PLAN B)
-            // Se usará si falla la API o si el celular bloquea la conexión.
-            const juegosRespaldo = [
-                {
-                    title: "Fortnite",
-                    image: "https://cdn2.unrealengine.com/25br-s25-egs-launcher-blade-2560x1440-2560x1440-690274f88062.jpg",
-                    platforms: "Epic Games",
-                    open_giveaway_url: "https://store.epicgames.com/es-MX/p/fortnite"
-                },
-                {
-                    title: "Overwatch 2",
-                    image: "https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/blt3036fa33c7f99990/63c5a6d36e25700d17277881/OW2_S3_EGS_Cat_Card_1200x1600.jpg",
-                    platforms: "Steam / Battle.net",
-                    open_giveaway_url: "https://store.steampowered.com/app/2357570/Overwatch_2/"
-                },
-                {
-                    title: "Rocket League",
-                    image: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Rocket_League_coverart.jpg",
-                    platforms: "Epic Games",
-                    open_giveaway_url: "https://store.epicgames.com/es-MX/p/rocket-league"
-                },
-                {
-                    title: "Genshin Impact",
-                    image: "https://cdn1.epicgames.com/offer/879b0d8776ab46a59a129983ba78f0ce/genshin-impact-1_1200x1600-474f67644917c52c6f13a078e3c49a62",
-                    platforms: "PC / Mobile",
-                    open_giveaway_url: "https://genshin.hoyoverse.com/"
-                }
-            ];
-
             try {
-                // INTENTO DE CARGA AUTOMÁTICA
-                const rssUrl = 'https://www.gamerpower.com/feed';
-                const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
-
-                const r = await fetch(apiUrl);
+                // USAMOS LA API "FREETOGAME" (La misma de FreeGameHub)
+                // Esta API tiene CORS habilitado, por lo que funciona NATIVAMENTE en celulares.
+                // No requiere proxies ni trucos raros.
+                
+                // Pedimos juegos de PC ordenados por popularidad
+                const r = await fetch('https://www.freetogame.com/api/games?platform=pc&sort-by=popularity');
+                
+                if (!r.ok) throw new Error("Error de conexión");
+                
                 const data = await r.json();
-
-                // 🛑 AQUÍ ESTABA EL ERROR: Verificamos si data.items existe antes de usarlo
-                if (!data || !data.items) {
-                    throw new Error("La API no devolvió noticias"); // Esto nos manda directo al catch (Plan B)
-                }
-
-                // Si todo sale bien, procesamos los juegos nuevos
-                const games = data.items.slice(0, 4).map(item => {
-                    let img = item.thumbnail;
-                    if(!img) {
-                        const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
-                        if(imgMatch) img = imgMatch[1];
-                    }
+                
+                // Tomamos los primeros 4 juegos
+                const games = data.slice(0, 4).map(item => {
                     return {
                         title: item.title,
-                        image: img || 'https://placehold.co/600x400/1a1a24/00ffcc?text=Juego',
-                        platforms: 'PC / Console',
-                        open_giveaway_url: item.link
+                        image: item.thumbnail, // La imagen viene directa, sin trucos
+                        platforms: item.platform,
+                        open_giveaway_url: item.game_url // Enlace al juego
                     };
                 });
 
@@ -488,10 +453,16 @@
                 renderGames(games);
 
             } catch(e) { 
-                console.log("Usando juegos de respaldo por error:", e);
+                console.error("Error cargando juegos:", e);
+                container.innerHTML = "<p>Cargando respaldo...</p>";
                 
-                // ACTIVAMOS EL PLAN B
-                allLoadedGames = juegosRespaldo;
+                // PLAN B: Si incluso esto falla (raro), mostramos respaldo manual
+                const juegosRespaldo = [
+                    { title: "Overwatch 2", image: "https://www.freetogame.com/g/540/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/overwatch-2" },
+                    { title: "Call of Duty: Warzone", image: "https://www.freetogame.com/g/452/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/call-of-duty-warzone" },
+                    { title: "Genshin Impact", image: "https://www.freetogame.com/g/475/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/genshin-impact" },
+                    { title: "Apex Legends", image: "https://www.freetogame.com/g/23/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/apex-legends" }
+                ];
                 renderGames(juegosRespaldo);
             }
         }
