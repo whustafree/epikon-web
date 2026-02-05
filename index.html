@@ -452,19 +452,7 @@ async function loadGames() {
                 allLoadedGames = games; 
                 renderGames(games);
 
-            } catch(e) { 
-                console.error("Error cargando juegos:", e);
-                container.innerHTML = "<p>Cargando respaldo...</p>";
-                
-                // PLAN B: Si incluso esto falla (raro), mostramos respaldo manual
-                const juegosRespaldo = [
-                    { title: "Overwatch 2", image: "https://www.freetogame.com/g/540/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/overwatch-2" },
-                    { title: "Call of Duty: Warzone", image: "https://www.freetogame.com/g/452/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/call-of-duty-warzone" },
-                    { title: "Genshin Impact", image: "https://www.freetogame.com/g/475/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/genshin-impact" },
-                    { title: "Apex Legends", image: "https://www.freetogame.com/g/23/thumbnail.jpg", platforms: "PC", open_giveaway_url: "https://www.freetogame.com/open/apex-legends" }
-                ];
-                renderGames(juegosRespaldo);
-            }
+            } 
         }
 
         function renderGames(games) { document.getElementById('games-container').innerHTML = games.map(g => `<div class="card"><img src="${g.image}" class="card-thumb" onerror="this.src='https://placehold.co/600x400/1a1a24/00ffcc?text=Game'"><div class="card-content"><div style="font-weight:bold; margin-bottom:10px;">${g.title}</div><div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">${g.platforms}</div><a href="${g.open_giveaway_url}" target="_blank" class="btn-action">GRATIS</a></div></div>`).join(''); }
