@@ -2,8 +2,6 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <script src="//cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EPIKON - Comunidad Geek Rancagua</title>
 
@@ -424,35 +422,44 @@
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
         
-async function loadGames() {
-            const container = document.getElementById('games-container');
-            
+       async function loadGames() {
             try {
-                // USAMOS LA API "FREETOGAME" (La misma de FreeGameHub)
-                // Esta API tiene CORS habilitado, por lo que funciona NATIVAMENTE en celulares.
-                // No requiere proxies ni trucos raros.
-                
-                // Pedimos juegos de PC ordenados por popularidad
-                const r = await fetch('https://www.freetogame.com/api/games?platform=pc&sort-by=popularity');
-                
-                if (!r.ok) throw new Error("Error de conexión");
-                
+                // USAMOS LA TÉCNICA RSS (Igual que tus noticias de anime)
+                // Esto es 100% compatible con celulares y nunca se bloquea.
+                const rssUrl = 'https://www.gamerpower.com/feed';
+                const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
+
+                const r = await fetch(apiUrl);
                 const data = await r.json();
-                
-                // Tomamos los primeros 4 juegos
-                const games = data.slice(0, 4).map(item => {
+
+                // Convertimos los datos del RSS al formato de tus tarjetas
+                const games = data.items.map(item => {
+                    // Truco para sacar la imagen de alta calidad
+                    let img = item.thumbnail;
+                    // Si no viene directa, la buscamos dentro del texto
+                    if(!img) {
+                        const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
+                        if(imgMatch) img = imgMatch[1];
+                    }
+                    // Si aun asi falla, ponemos una por defecto
+                    if(!img) img = 'https://placehold.co/600x400/1a1a24/00ffcc?text=Juego+Gratis';
+
                     return {
                         title: item.title,
-                        image: item.thumbnail, // La imagen viene directa, sin trucos
-                        platforms: item.platform,
-                        open_giveaway_url: item.game_url // Enlace al juego
+                        image: img,
+                        // Unimos las categorías (Steam, Epic) para que el filtro funcione
+                        platforms: Array.isArray(item.categories) ? item.categories.join(' ') : 'PC',
+                        open_giveaway_url: item.link
                     };
                 });
 
                 allLoadedGames = games; 
-                renderGames(games);
+                renderGames(games.slice(0, 4));
 
-            } 
+            } catch(e) { 
+                console.error("Games Error:", e);
+                document.getElementById('games-container').innerHTML = "<p>Buscando ofertas...</p>"; 
+            }
         }
 
         function renderGames(games) { document.getElementById('games-container').innerHTML = games.map(g => `<div class="card"><img src="${g.image}" class="card-thumb" onerror="this.src='https://placehold.co/600x400/1a1a24/00ffcc?text=Game'"><div class="card-content"><div style="font-weight:bold; margin-bottom:10px;">${g.title}</div><div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">${g.platforms}</div><a href="${g.open_giveaway_url}" target="_blank" class="btn-action">GRATIS</a></div></div>`).join(''); }
