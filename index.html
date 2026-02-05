@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>EPIKON - Comunidad Geek Rancagua</title>
-
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#00ffcc">
-    <link rel="apple-touch-icon" href="mascota.png">
-
+    <link rel="apple-touch-icon" href="mascota.png"> ```
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="config.js"></script>
 
@@ -54,10 +52,10 @@
         }
         .event-flyer { 
             width: 100%; 
-            height: auto; 
+            height: auto; /* <--- ESTO ES LA CLAVE */
             display: block; 
-            max-height: 600px; 
-            object-fit: contain; 
+            max-height: 600px; /* Opcional: evita que una imagen vertical ocupe toda la pantalla */
+            object-fit: contain; /* Asegura que se vea entera si llega al límite de altura */
         }
         .event-details { padding: 20px; }
         .event-title { color: var(--neon-color); font-size: 1.8rem; margin: 0 0 10px 0; text-transform: uppercase; font-weight: 800; line-height: 1.1; }
@@ -278,14 +276,6 @@
         });
 
         function initApp() {
-            // --- REGISTRO DE PWA (IMPORTANTE) ---
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(() => console.log('App lista para instalar'))
-                    .catch(err => console.error('Error SW:', err));
-            }
-            // ------------------------------------
-
             const logoEl = document.getElementById('dynamic-logo');
             if(CONFIG.imagenes && CONFIG.imagenes.logo) logoEl.src = CONFIG.imagenes.logo;
             logoEl.onload = () => logoEl.classList.add('loaded');
@@ -314,7 +304,7 @@
             let fraseIdx = 0;
 
             img.src = CONFIG.mascota.imagenPng;
-            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN AL BOTÓN
+            if(restoreImg) restoreImg.src = CONFIG.mascota.imagenPng; // ASIGNAR LA MISMA IMAGEN
 
             container.style.display = 'flex';
 
@@ -422,43 +412,17 @@
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
         
-       async function loadGames() {
+        async function loadGames() {
             try {
-                // USAMOS LA TÉCNICA RSS (Igual que tus noticias de anime)
-                // Esto es 100% compatible con celulares y nunca se bloquea.
-                const rssUrl = 'https://www.gamerpower.com/feed';
-                const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
-
-                const r = await fetch(apiUrl);
-                const data = await r.json();
-
-                // Convertimos los datos del RSS al formato de tus tarjetas
-                const games = data.items.map(item => {
-                    // Truco para sacar la imagen de alta calidad
-                    let img = item.thumbnail;
-                    // Si no viene directa, la buscamos dentro del texto
-                    if(!img) {
-                        const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
-                        if(imgMatch) img = imgMatch[1];
-                    }
-                    // Si aun asi falla, ponemos una por defecto
-                    if(!img) img = 'https://placehold.co/600x400/1a1a24/00ffcc?text=Juego+Gratis';
-
-                    return {
-                        title: item.title,
-                        image: img,
-                        // Unimos las categorías (Steam, Epic) para que el filtro funcione
-                        platforms: Array.isArray(item.categories) ? item.categories.join(' ') : 'PC',
-                        open_giveaway_url: item.link
-                    };
-                });
-
-                allLoadedGames = games; 
-                renderGames(games.slice(0, 4));
-
+                const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+                const targetUrl = 'https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity';
+                const r = await fetch(proxyUrl + encodeURIComponent(targetUrl));
+                if (!r.ok) throw new Error("Error Proxy");
+                const d = await r.json();
+                allLoadedGames = d; 
+                renderGames(d.slice(0, 4));
             } catch(e) { 
-                console.error("Games Error:", e);
-                document.getElementById('games-container').innerHTML = "<p>Buscando ofertas...</p>"; 
+                document.getElementById('games-container').innerHTML = "<p>Intenta recargar la página.</p>"; 
             }
         }
 
