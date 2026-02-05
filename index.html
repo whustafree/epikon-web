@@ -422,17 +422,37 @@
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
         
-        async function loadGames() {
+       async function loadGames() {
+            const container = document.getElementById('games-container');
+            
             try {
-                const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest=';
+                // CAMBIO 1: Usamos 'corsproxy.io' que funciona mejor en móviles
+                // Nota: Este proxy es más rápido y tiene certificados SSL que gustan más a Android/iOS
                 const targetUrl = 'https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity';
-                const r = await fetch(proxyUrl + encodeURIComponent(targetUrl));
-                if (!r.ok) throw new Error("Error Proxy");
+                const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+                
+                const r = await fetch(proxyUrl);
+                
+                if (!r.ok) throw new Error("Error al cargar");
+                
                 const d = await r.json();
+                
+                // Guardamos los juegos y los mostramos
                 allLoadedGames = d; 
                 renderGames(d.slice(0, 4));
+                
             } catch(e) { 
-                document.getElementById('games-container').innerHTML = "<p>Intenta recargar la página.</p>"; 
+                console.error("Games Error:", e);
+                
+                // CAMBIO 2: PLAN B - Si falla en el celular, mostramos un botón elegante
+                container.innerHTML = `
+                    <div style="width:100%; text-align:center; padding:20px;">
+                        <p style="color:#aaa; margin-bottom:10px;">No se pudieron cargar las previsualizaciones.</p>
+                        <a href="https://www.gamerpower.com/giveaways" target="_blank" class="btn-action" style="max-width:200px; margin:0 auto;">
+                            <i class="fas fa-external-link-alt"></i> VER JUEGOS GRATIS
+                        </a>
+                    </div>
+                `;
             }
         }
 
