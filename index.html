@@ -424,43 +424,75 @@
         // --- CONTENT ---
         async function loadAllContent() { await loadGames(); loadAnimeCalendar(); loadRSSNews('https://somoskudasai.com/feed/', 'anime-news-container'); loadRSSNews('https://latam.ign.com/feed.xml', 'news-container'); }
         
-       async function loadGames() {
+  async function loadGames() {
+            const container = document.getElementById('games-container');
+            
+            // LISTA DE RESPALDO (PLAN B)
+            // Se usará si falla la API o si el celular bloquea la conexión.
+            const juegosRespaldo = [
+                {
+                    title: "Fortnite",
+                    image: "https://cdn2.unrealengine.com/25br-s25-egs-launcher-blade-2560x1440-2560x1440-690274f88062.jpg",
+                    platforms: "Epic Games",
+                    open_giveaway_url: "https://store.epicgames.com/es-MX/p/fortnite"
+                },
+                {
+                    title: "Overwatch 2",
+                    image: "https://blz-contentstack-images.akamaized.net/v3/assets/blt2477dcaf4ebd440c/blt3036fa33c7f99990/63c5a6d36e25700d17277881/OW2_S3_EGS_Cat_Card_1200x1600.jpg",
+                    platforms: "Steam / Battle.net",
+                    open_giveaway_url: "https://store.steampowered.com/app/2357570/Overwatch_2/"
+                },
+                {
+                    title: "Rocket League",
+                    image: "https://upload.wikimedia.org/wikipedia/commons/e/e0/Rocket_League_coverart.jpg",
+                    platforms: "Epic Games",
+                    open_giveaway_url: "https://store.epicgames.com/es-MX/p/rocket-league"
+                },
+                {
+                    title: "Genshin Impact",
+                    image: "https://cdn1.epicgames.com/offer/879b0d8776ab46a59a129983ba78f0ce/genshin-impact-1_1200x1600-474f67644917c52c6f13a078e3c49a62",
+                    platforms: "PC / Mobile",
+                    open_giveaway_url: "https://genshin.hoyoverse.com/"
+                }
+            ];
+
             try {
-                // USAMOS LA TÉCNICA RSS (Igual que tus noticias de anime)
-                // Esto es 100% compatible con celulares y nunca se bloquea.
+                // INTENTO DE CARGA AUTOMÁTICA
                 const rssUrl = 'https://www.gamerpower.com/feed';
                 const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
 
                 const r = await fetch(apiUrl);
                 const data = await r.json();
 
-                // Convertimos los datos del RSS al formato de tus tarjetas
-                const games = data.items.map(item => {
-                    // Truco para sacar la imagen de alta calidad
+                // 🛑 AQUÍ ESTABA EL ERROR: Verificamos si data.items existe antes de usarlo
+                if (!data || !data.items) {
+                    throw new Error("La API no devolvió noticias"); // Esto nos manda directo al catch (Plan B)
+                }
+
+                // Si todo sale bien, procesamos los juegos nuevos
+                const games = data.items.slice(0, 4).map(item => {
                     let img = item.thumbnail;
-                    // Si no viene directa, la buscamos dentro del texto
                     if(!img) {
                         const imgMatch = item.description.match(/<img[^>]+src="([^">]+)"/);
                         if(imgMatch) img = imgMatch[1];
                     }
-                    // Si aun asi falla, ponemos una por defecto
-                    if(!img) img = 'https://placehold.co/600x400/1a1a24/00ffcc?text=Juego+Gratis';
-
                     return {
                         title: item.title,
-                        image: img,
-                        // Unimos las categorías (Steam, Epic) para que el filtro funcione
-                        platforms: Array.isArray(item.categories) ? item.categories.join(' ') : 'PC',
+                        image: img || 'https://placehold.co/600x400/1a1a24/00ffcc?text=Juego',
+                        platforms: 'PC / Console',
                         open_giveaway_url: item.link
                     };
                 });
 
                 allLoadedGames = games; 
-                renderGames(games.slice(0, 4));
+                renderGames(games);
 
             } catch(e) { 
-                console.error("Games Error:", e);
-                document.getElementById('games-container').innerHTML = "<p>Buscando ofertas...</p>"; 
+                console.log("Usando juegos de respaldo por error:", e);
+                
+                // ACTIVAMOS EL PLAN B
+                allLoadedGames = juegosRespaldo;
+                renderGames(juegosRespaldo);
             }
         }
 
