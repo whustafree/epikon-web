@@ -73,7 +73,6 @@ export default function Layout({ children }: LayoutProps) {
           {/* Logo */}
           <button onClick={() => navigate('/')} className="flex items-center gap-3 bg-none border-none cursor-pointer">
             <img src={config.imagenes.logo} alt="EPIKON" className="h-9 w-auto" />
-            <span className="text-neon-cyan font-bold text-lg tracking-wider">EPIKON</span>
           </button>
 
           {/* Nav links */}
@@ -111,7 +110,6 @@ export default function Layout({ children }: LayoutProps) {
         <div className="flex items-center justify-between px-4 h-14">
           <button onClick={() => navigate('/')} className="flex items-center gap-2 bg-none border-none cursor-pointer">
             <img src={config.imagenes.logo} alt="EPIKON" className="h-8 w-auto" />
-            <span className="text-neon-cyan font-bold">EPIKON</span>
           </button>
 
           <button

@@ -20,12 +20,6 @@ interface Anime {
   score: number | null
 }
 
-interface ScheduleDay {
-  day: string
-  dayEs: string
-  animes: Anime[]
-}
-
 interface RSSItem {
   title: string
   link: string
@@ -153,7 +147,7 @@ function GamesSection() {
 }
 
 // ==================== ANIME SCHEDULE BY DAY ====================
-const DAYS = [
+const DAYS: { en: string; es: string }[] = [
   { en: 'monday', es: 'LUNES' },
   { en: 'tuesday', es: 'MARTES' },
   { en: 'wednesday', es: 'MIÉRCOLES' },
@@ -163,41 +157,51 @@ const DAYS = [
   { en: 'sunday', es: 'DOMINGO' },
 ]
 
+// Derive DAY_MAP from DAYS to avoid duplication
+const DAY_MAP: Record<string, string> = Object.fromEntries(DAYS.map(d => [d.en, d.es]))
+
 function AnimeSchedule() {
-  const [schedule, setSchedule] = useState<ScheduleDay[]>([])
+  const [byDay, setByDay] = useState<Record<string, Anime[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
-  const [selectedDay, setSelectedDay] = useState<string>('monday')
+  const [selectedDay, setSelectedDay] = useState('monday')
 
   useEffect(() => {
     let cancelled = false
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-    const fetchSchedule = async () => {
+    const fetchAll = async () => {
       try {
-        const results: ScheduleDay[] = []
-        for (const day of DAYS) {
-          await delay(350) // Safe rate limit: ~3 requests/second
-          const r = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day.en}`) // Sin limit = todos los animes
-          if (!r.ok) throw new Error('Error fetching schedule')
-          const d = await r.json()
-          results.push({
-            day: day.en,
-            dayEs: day.es,
-            animes: (d.data || []) as Anime[],
-          })
+        // Single request to get ALL anime for the current season
+        const r = await fetch('https://api.jikan.moe/v4/schedules')
+        if (!r.ok) throw new Error('Error fetching schedule')
+        const d = await r.json()
+        if (cancelled) return
+
+        const data: Anime[] = d.data || []
+        // Group by broadcast day
+        const grouped: Record<string, Anime[]> = {}
+        for (const day of DAYS) grouped[day.en] = []
+        grouped.unknown = []
+
+        for (const anime of data) {
+          const day = (anime as any).broadcast?.day?.toLowerCase()
+          if (day && grouped[day]) {
+            grouped[day].push(anime)
+          } else {
+            grouped.unknown.push(anime)
+          }
         }
-        if (!cancelled) setSchedule(results)
+        setByDay(grouped)
       } catch {
         if (!cancelled) setError(true)
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
-    fetchSchedule()
+    fetchAll()
     return () => { cancelled = true }
   }, [])
 
-  const currentDay = schedule.find(d => d.day === selectedDay)
+  const currentAnimes = byDay[selectedDay] || []
 
   if (loading) {
     return (
@@ -227,10 +231,17 @@ function AnimeSchedule() {
       <div className="text-center p-6 border border-dashed border-yellow-500/50 rounded-xl bg-yellow-500/5 max-w-lg mx-auto">
         <i className="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-3" />
         <h3 className="text-yellow-400 font-bold m-0">Calendario no disponible</h3>
-        <p className="text-gray-400 text-sm mt-1">La API de Jikan está temporalmente limitada. Intenta recargar la página.</p>
+        <p className="text-gray-400 text-sm mt-2">No se pudo cargar el calendario de anime.</p>
+        <button onClick={() => window.location.reload()}
+          className="mt-2 px-5 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all">
+          <i className="fas fa-sync-alt" /> RECARGAR
+        </button>
       </div>
     )
   }
+
+  // Count total anime
+  const total = Object.values(byDay).reduce((sum, arr) => sum + arr.length, 0)
 
   return (
     <>
@@ -244,46 +255,52 @@ function AnimeSchedule() {
                 : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
           >
-            {d.es}
+            {d.es} <span className="opacity-60">({(byDay[d.en] || []).length})</span>
           </button>
         ))}
       </div>
 
-      {/* Anime cards for selected day */}
-      {currentDay && currentDay.animes.length === 0 ? (
-        <p className="text-gray-500 text-center">No hay animes programados para este día.</p>
-      ) : currentDay && (
-        <div className="grid-base">
-          {currentDay.animes.map((a, i) => (
-            <div key={i} className="card group">
-              <div className="relative overflow-hidden">
-                <img
-                  src={a.images.jpg.large_image_url}
-                  alt={a.title}
-                  className="w-full h-[180px] object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1a1a24/00ffcc?text=No+Image' }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                {a.score && (
-                  <span className="absolute top-2 right-2 bg-black/70 text-yellow-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
-                    ★ {a.score}
-                  </span>
-                )}
-              </div>
-              <div className="p-3 flex flex-col flex-1 justify-between">
-                <div className="font-bold text-xs leading-tight mb-1 line-clamp-2">{a.title}</div>
-                <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
-                  {a.type && <span className="bg-gray-800 px-1.5 py-0.5 rounded">{a.type}</span>}
-                  {a.episodes && <span>{a.episodes} ep.</span>}
+      {total === 0 ? (
+        <p className="text-gray-500 text-center">No hay animes en emisión esta temporada.</p>
+      ) : currentAnimes.length === 0 ? (
+        <p className="text-gray-500 text-center">No hay animes programados para {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.</p>
+      ) : (
+        <>
+          <p className="text-gray-500 text-xs text-center mb-4">
+            {currentAnimes.length} animes en {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'} — {total} en total esta temporada
+          </p>
+          <div className="grid-base">
+            {currentAnimes.map((a, i) => (
+              <div key={i} className="card group">
+                <div className="relative overflow-hidden">
+                  <img
+                    src={a.images.jpg.large_image_url}
+                    alt={a.title}
+                    className="w-full h-[180px] object-cover transition-transform duration-500 group-hover:scale-105"
+                    loading="lazy"
+                    onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1a1a24/00ffcc?text=No+Image' }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {a.score && (
+                    <span className="absolute top-2 right-2 bg-black/70 text-yellow-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                      ★ {a.score}
+                    </span>
+                  )}
                 </div>
-                <a href={a.url} target="_blank" rel="noopener noreferrer" className="btn-action text-xs py-2">
-                  <i className="fas fa-info-circle" /> INFO
-                </a>
+                <div className="p-3 flex flex-col flex-1 justify-between">
+                  <div className="font-bold text-xs leading-tight mb-1 line-clamp-2">{a.title}</div>
+                  <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                    {a.type && <span className="bg-gray-800 px-1.5 py-0.5 rounded">{a.type}</span>}
+                    {a.episodes && <span>{a.episodes} ep.</span>}
+                  </div>
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" className="btn-action text-xs py-2">
+                    <i className="fas fa-info-circle" /> INFO
+                  </a>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
     </>
   )

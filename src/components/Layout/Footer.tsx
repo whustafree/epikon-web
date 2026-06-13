@@ -12,7 +12,6 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-3 mb-3">
               <img src={config.imagenes.logo} alt="EPIKON" className="h-10 w-auto" />
-              <span className="text-neon-cyan font-bold text-lg tracking-wider">EPIKON</span>
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
               Comunidad Geek de Rancagua. Eventos, torneos, cosplay y más.
