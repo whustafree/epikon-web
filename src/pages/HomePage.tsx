@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { loadEvento } from '../data/dataLoader'
 
 // ==================== TYPES ====================
@@ -157,29 +157,27 @@ const DAYS: { en: string; es: string }[] = [
   { en: 'sunday', es: 'DOMINGO' },
 ]
 
-// Derive DAY_MAP from DAYS to avoid duplication
 const DAY_MAP: Record<string, string> = Object.fromEntries(DAYS.map(d => [d.en, d.es]))
 
-// Cache helpers for daily refresh
+// -------- Cache helpers --------
 const CACHE_KEY = 'epikon_anime_schedule'
 const CACHE_DATE_KEY = 'epikon_anime_cache_date'
 
 function getTodayStr(): string {
-  return new Date().toISOString().split('T')[0] // 'YYYY-MM-DD'
+  return new Date().toISOString().split('T')[0]
 }
 
-function loadCachedSchedule(): Record<string, Anime[]> | null {
-  const saved = localStorage.getItem(CACHE_KEY)
-  const savedDate = localStorage.getItem(CACHE_DATE_KEY)
-  if (!saved || !savedDate) return null
-  if (savedDate !== getTodayStr()) {
-    // Cache expired — clear it
-    localStorage.removeItem(CACHE_KEY)
-    localStorage.removeItem(CACHE_DATE_KEY)
-    return null
-  }
+function loadCachedSchedule(): { data: Record<string, Anime[]>; fromCache: boolean } | null {
   try {
-    return JSON.parse(saved)
+    const saved = localStorage.getItem(CACHE_KEY)
+    const savedDate = localStorage.getItem(CACHE_DATE_KEY)
+    if (!saved || !savedDate) return null
+    if (savedDate !== getTodayStr()) {
+      localStorage.removeItem(CACHE_KEY)
+      localStorage.removeItem(CACHE_DATE_KEY)
+      return null
+    }
+    return { data: JSON.parse(saved), fromCache: true }
   } catch {
     return null
   }
@@ -190,7 +188,7 @@ function saveCachedSchedule(data: Record<string, Anime[]>) {
     localStorage.setItem(CACHE_KEY, JSON.stringify(data))
     localStorage.setItem(CACHE_DATE_KEY, getTodayStr())
   } catch {
-    // localStorage might be full, ignore
+    // localStorage might be full or blocked (Brave, incognito), ignore
   }
 }
 
@@ -210,47 +208,93 @@ function groupAnimeByDay(data: Anime[]): Record<string, Anime[]> {
   return grouped
 }
 
+// -------- AnimeSchedule component --------
 function AnimeSchedule() {
   const [byDay, setByDay] = useState<Record<string, Anime[]>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [selectedDay, setSelectedDay] = useState('monday')
+  const [isCached, setIsCached] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
+  const cancelledRef = useRef(false)
 
-    // Try cache first
-    const cached = loadCachedSchedule()
-    if (cached) {
-      setByDay(cached)
-      setLoading(false)
-      return
-    }
+  const doFetch = async (forceRefresh = false) => {
+    try {
+      // Try cache first (unless force refresh)
+      if (!forceRefresh) {
+        const cached = loadCachedSchedule()
+        if (cached) {
+          setByDay(cached.data)
+          setIsCached(true)
+          setLoading(false)
+          return
+        }
+      }
 
-    const fetchAll = async () => {
-      try {
-        // Single request to get ALL anime for the current season
-        const r = await fetch('https://api.jikan.moe/v4/schedules')
-        if (!r.ok) throw new Error('Error fetching schedule')
-        const d = await r.json()
-        if (cancelled) return
+      setIsCached(false)
+      setError(false)
 
-        const data: Anime[] = d.data || []
-        const grouped = groupAnimeByDay(data)
-        setByDay(grouped)
-        saveCachedSchedule(grouped)
-      } catch {
-        if (!cancelled) setError(true)
-      } finally {
-        if (!cancelled) setLoading(false)
+      // Fetch first page
+      const r = await fetch('https://api.jikan.moe/v4/schedules')
+      if (!r.ok) throw new Error('HTTP ' + r.status)
+      const d = await r.json()
+      if (cancelledRef.current) return
+
+      let allAnime: Anime[] = d.data || []
+      const pagination = d.pagination
+
+      // Fetch more pages if available (max 5 pages total = ~125 anime)
+      const maxPages = Math.min(pagination?.last_visible_page || 1, 5)
+      for (let page = 2; page <= maxPages; page++) {
+        await new Promise(r => setTimeout(r, 600)) // respect rate limit
+        if (cancelledRef.current) return
+        try {
+          const res = await fetch(`https://api.jikan.moe/v4/schedules?page=${page}`)
+          if (res.ok) {
+            const pageData = await res.json()
+            allAnime = allAnime.concat(pageData.data || [])
+          }
+        } catch {
+          // If a page fails, continue with what we have
+        }
+      }
+
+      if (cancelledRef.current) return
+
+      const grouped = groupAnimeByDay(allAnime)
+      setByDay(grouped)
+      saveCachedSchedule(grouped)
+    } catch {
+      if (!cancelledRef.current) setError(true)
+    } finally {
+      if (!cancelledRef.current) {
+        setLoading(false)
+        setRefreshing(false)
       }
     }
-    fetchAll()
-    return () => { cancelled = true }
+  }
+
+  useEffect(() => {
+    cancelledRef.current = false
+    doFetch()
+    return () => { cancelledRef.current = true }
   }, [])
 
-  const currentAnimes = byDay[selectedDay] || []
+  const handleRefresh = () => {
+    setRefreshing(true)
+    doFetch(true)
+  }
 
+  const currentAnimes = byDay[selectedDay] || []
+  const filteredAnimes = searchTerm
+    ? currentAnimes.filter(a => a.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    : currentAnimes
+
+  const total = Object.values(byDay).reduce((sum, arr) => sum + arr.length, 0)
+
+  // -------- LOADING --------
   if (loading) {
     return (
       <div className="text-center">
@@ -274,27 +318,49 @@ function AnimeSchedule() {
     )
   }
 
+  // -------- ERROR --------
   if (error) {
     return (
       <div className="text-center p-6 border border-dashed border-yellow-500/50 rounded-xl bg-yellow-500/5 max-w-lg mx-auto">
         <i className="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-3" />
         <h3 className="text-yellow-400 font-bold m-0">Calendario no disponible</h3>
-        <p className="text-gray-400 text-sm mt-2">No se pudo cargar el calendario de anime.</p>
-        <button onClick={() => window.location.reload()}
-          className="mt-2 px-5 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all">
-          <i className="fas fa-sync-alt" /> RECARGAR
-        </button>
+        <p className="text-gray-400 text-sm mt-2">
+          No se pudo cargar el calendario de anime.{' '}
+          {navigator.onLine === false && 'Parece que no tienes conexión a internet.'}
+        </p>
+        <div className="flex justify-center gap-2 mt-4">
+          <button onClick={handleRefresh}
+            className="px-5 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all flex items-center gap-1.5">
+            <i className="fas fa-sync-alt" /> REINTENTAR
+          </button>
+          <button onClick={() => { setError(false); setLoading(true); doFetch() }}
+            className="px-5 py-2 bg-gray-700 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all">
+            <i className="fas fa-redo" /> FORZAR CARGA
+          </button>
+        </div>
       </div>
     )
   }
 
-  // Count total anime
-  const total = Object.values(byDay).reduce((sum, arr) => sum + arr.length, 0)
-
+  // -------- CONTENT --------
   return (
     <>
+      {/* Toolbar: badge + refresh + search */}
+      <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
+        {isCached && (
+          <span className="text-[10px] bg-green-900/40 text-green-400 px-2.5 py-1 rounded-full border border-green-700/30 flex items-center gap-1">
+            <i className="fas fa-database text-[9px]" /> Cacheado hoy
+          </span>
+        )}
+        <button onClick={handleRefresh} disabled={refreshing}
+          className="text-[10px] bg-gray-800/50 text-gray-400 px-2.5 py-1 rounded-full hover:text-white hover:bg-gray-700/50 transition-all disabled:opacity-50 flex items-center gap-1">
+          <i className={`fas fa-sync-alt ${refreshing ? 'animate-spin' : ''}`} />{' '}
+          {refreshing ? 'Actualizando…' : 'Refrescar'}
+        </button>
+      </div>
+
       {/* Day selector pills */}
-      <div className="flex justify-center gap-1.5 mb-5 flex-wrap">
+      <div className="flex justify-center gap-1.5 mb-4 flex-wrap">
         {DAYS.map(d => (
           <button key={d.en} onClick={() => setSelectedDay(d.en)}
             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
@@ -308,17 +374,42 @@ function AnimeSchedule() {
         ))}
       </div>
 
+      {/* Search input (only show if there are anime) */}
+      {total > 0 && (
+        <div className="relative max-w-xs mx-auto mb-5">
+          <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
+          <input
+            type="text"
+            placeholder="Buscar anime por nombre…"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full bg-gray-800/50 border border-gray-700/50 rounded-full pl-8 pr-4 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-neon-cyan/50 transition-all"
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-all text-xs">
+              <i className="fas fa-times" />
+            </button>
+          )}
+        </div>
+      )}
+
       {total === 0 ? (
         <p className="text-gray-500 text-center">No hay animes en emisión esta temporada.</p>
-      ) : currentAnimes.length === 0 ? (
-        <p className="text-gray-500 text-center">No hay animes programados para {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.</p>
+      ) : filteredAnimes.length === 0 ? (
+        <p className="text-gray-500 text-center">
+          {searchTerm
+            ? `No se encontró "${searchTerm}" en ${DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.`
+            : `No hay animes programados para ${DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.`}
+        </p>
       ) : (
         <>
           <p className="text-gray-500 text-xs text-center mb-4">
-            {currentAnimes.length} animes en {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'} — {total} en total esta temporada
+            {filteredAnimes.length} de {currentAnimes.length} animes en {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}
+            {' — '}{total} en total
           </p>
           <div className="grid-base">
-            {currentAnimes.map((a, i) => (
+            {filteredAnimes.map((a, i) => (
               <div key={i} className="card group">
                 <div className="relative overflow-hidden">
                   <img
