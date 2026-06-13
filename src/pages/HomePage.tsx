@@ -177,7 +177,7 @@ function AnimeSchedule() {
         const results: ScheduleDay[] = []
         for (const day of DAYS) {
           await delay(350) // Safe rate limit: ~3 requests/second
-          const r = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day.en}&limit=6`)
+          const r = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day.en}`) // Sin limit = todos los animes
           if (!r.ok) throw new Error('Error fetching schedule')
           const d = await r.json()
           results.push({
@@ -342,8 +342,10 @@ function RSSSection({ url, title, icon }: { url: string; title: string; icon: st
 
   return (
     <div className="grid-base">
-      {items.map((item, i) => {
+      {items.map((item: any, i) => {
+        const enclosure = item.enclosure?.link
         const img = item.thumbnail ||
+          enclosure ||
           item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
           'https://placehold.co/600x400/1a1a24/00ffcc?text=' + encodeURIComponent(title)
         return (
@@ -452,7 +454,7 @@ export default function HomePage() {
         <h2 className="section-title">
           <i className="fas fa-newspaper text-neon-pink mr-2" /> Noticias Anime
         </h2>
-        <RSSSection url="https://somoskudasai.com/feed/" title="Anime News" icon="fa-newspaper" />
+        <RSSSection url="https://somoskudasai.com/noticias/feed/" title="Anime News" icon="fa-newspaper" />
       </section>
 
       {/* Geek News */}
