@@ -153,7 +153,16 @@ export default function AdminPage() {
       {/* Evento Editor */}
       {tab === 'evento' && (
         <div className="bg-bg-card border border-gray-700 rounded-2xl p-6 space-y-4">
-          <h2 className="text-neon-cyan text-xl">Editar Evento Principal</h2>
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-neon-cyan text-xl">Editar Evento Principal</h2>
+            <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+              <input type="checkbox" checked={evento.activo} onChange={e => setEvento(prev => ({ ...prev, activo: e.target.checked }))}
+                className="accent-neon-cyan w-5 h-5" />
+              <span className={evento.activo ? 'text-green-400' : 'text-red-400'}>
+                {evento.activo ? 'Visible en web' : 'Oculto'}
+              </span>
+            </label>
+          </div>
           {(['titulo', 'descripcion', 'cronograma', 'ubicacion'] as const).map(field => (
             <div key={field}>
               <label className="text-gray-400 text-sm uppercase block mb-1">{field}</label>
@@ -299,10 +308,17 @@ export default function AdminPage() {
               {galeriaActual.map((url, i) => (
                 <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-700">
                   <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button onClick={() => removePhoto(i, 'actual')}
-                    className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                    ×
-                  </button>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all" />
+                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => { setGaleriaAnterior(prev => [...prev, url]); removePhoto(i, 'actual') }}
+                      className="bg-yellow-600 text-white w-6 h-6 rounded-full text-[10px] hover:brightness-110" title="Archivar">
+                      <i className="fas fa-archive" />
+                    </button>
+                    <button onClick={() => removePhoto(i, 'actual')}
+                      className="bg-red-600 text-white w-6 h-6 rounded-full text-xs hover:brightness-110" title="Eliminar">
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -311,10 +327,17 @@ export default function AdminPage() {
               {galeriaAnterior.map((url, i) => (
                 <div key={i} className="relative group aspect-square rounded-lg overflow-hidden border border-gray-700">
                   <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button onClick={() => removePhoto(i, 'anterior')}
-                    className="absolute top-1 right-1 bg-red-600 text-white w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity">
-                    ×
-                  </button>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all" />
+                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => { setGaleriaActual(prev => [...prev, url]); removePhoto(i, 'anterior') }}
+                      className="bg-neon-cyan text-black w-6 h-6 rounded-full text-[10px] hover:brightness-110" title="Restaurar a actual">
+                      <i className="fas fa-undo" />
+                    </button>
+                    <button onClick={() => removePhoto(i, 'anterior')}
+                      className="bg-red-600 text-white w-6 h-6 rounded-full text-xs hover:brightness-110" title="Eliminar">
+                      ×
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
