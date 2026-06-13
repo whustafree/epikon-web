@@ -160,6 +160,56 @@ const DAYS: { en: string; es: string }[] = [
 // Derive DAY_MAP from DAYS to avoid duplication
 const DAY_MAP: Record<string, string> = Object.fromEntries(DAYS.map(d => [d.en, d.es]))
 
+// Cache helpers for daily refresh
+const CACHE_KEY = 'epikon_anime_schedule'
+const CACHE_DATE_KEY = 'epikon_anime_cache_date'
+
+function getTodayStr(): string {
+  return new Date().toISOString().split('T')[0] // 'YYYY-MM-DD'
+}
+
+function loadCachedSchedule(): Record<string, Anime[]> | null {
+  const saved = localStorage.getItem(CACHE_KEY)
+  const savedDate = localStorage.getItem(CACHE_DATE_KEY)
+  if (!saved || !savedDate) return null
+  if (savedDate !== getTodayStr()) {
+    // Cache expired — clear it
+    localStorage.removeItem(CACHE_KEY)
+    localStorage.removeItem(CACHE_DATE_KEY)
+    return null
+  }
+  try {
+    return JSON.parse(saved)
+  } catch {
+    return null
+  }
+}
+
+function saveCachedSchedule(data: Record<string, Anime[]>) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    localStorage.setItem(CACHE_DATE_KEY, getTodayStr())
+  } catch {
+    // localStorage might be full, ignore
+  }
+}
+
+function groupAnimeByDay(data: Anime[]): Record<string, Anime[]> {
+  const grouped: Record<string, Anime[]> = {}
+  for (const day of DAYS) grouped[day.en] = []
+  grouped.unknown = []
+
+  for (const anime of data) {
+    const day = (anime as any).broadcast?.day?.toLowerCase()
+    if (day && grouped[day]) {
+      grouped[day].push(anime)
+    } else {
+      grouped.unknown.push(anime)
+    }
+  }
+  return grouped
+}
+
 function AnimeSchedule() {
   const [byDay, setByDay] = useState<Record<string, Anime[]>>({})
   const [loading, setLoading] = useState(true)
@@ -168,6 +218,15 @@ function AnimeSchedule() {
 
   useEffect(() => {
     let cancelled = false
+
+    // Try cache first
+    const cached = loadCachedSchedule()
+    if (cached) {
+      setByDay(cached)
+      setLoading(false)
+      return
+    }
+
     const fetchAll = async () => {
       try {
         // Single request to get ALL anime for the current season
@@ -177,20 +236,9 @@ function AnimeSchedule() {
         if (cancelled) return
 
         const data: Anime[] = d.data || []
-        // Group by broadcast day
-        const grouped: Record<string, Anime[]> = {}
-        for (const day of DAYS) grouped[day.en] = []
-        grouped.unknown = []
-
-        for (const anime of data) {
-          const day = (anime as any).broadcast?.day?.toLowerCase()
-          if (day && grouped[day]) {
-            grouped[day].push(anime)
-          } else {
-            grouped.unknown.push(anime)
-          }
-        }
+        const grouped = groupAnimeByDay(data)
         setByDay(grouped)
+        saveCachedSchedule(grouped)
       } catch {
         if (!cancelled) setError(true)
       } finally {
