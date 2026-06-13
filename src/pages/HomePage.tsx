@@ -1,19 +1,29 @@
 import { useState, useEffect } from 'react'
 import { loadEvento } from '../data/dataLoader'
 
-// --- Types ---
+// ==================== TYPES ====================
 interface Game {
   title: string
   image: string
   platforms: string
   open_giveaway_url: string
+  description: string
 }
 
 interface Anime {
   title: string
   images: { jpg: { large_image_url: string } }
   url: string
-  broadcast: { day: string }
+  synopsis: string
+  episodes: number | null
+  type: string
+  score: number | null
+}
+
+interface ScheduleDay {
+  day: string
+  dayEs: string
+  animes: Anime[]
 }
 
 interface RSSItem {
@@ -23,23 +33,27 @@ interface RSSItem {
   description?: string
 }
 
-const DAY_MAP: Record<string, string> = {
-  Mondays: 'Lunes', Tuesdays: 'Martes', Wednesdays: 'Miércoles',
-  Thursdays: 'Jueves', Fridays: 'Viernes', Saturdays: 'Sábados', Sundays: 'Domingos',
-}
-
+// ==================== CARD COMPONENT ====================
 function Card({ img, title, meta, link, linkText }: {
   img: string; title: string; meta?: React.ReactNode; link: string; linkText?: string
 }) {
+  const [imgError, setImgError] = useState(false)
   return (
-    <div className="card">
-      <img src={img} alt={title} className="w-full h-[160px] object-cover"
-        onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1a1a24/00ffcc?text=No+Image' }}
-      />
+    <div className="card group">
+      <div className="relative overflow-hidden">
+        <img
+          src={imgError ? 'https://placehold.co/600x400/1a1a24/00ffcc?text=No+Image' : img}
+          alt={title}
+          className="w-full h-[180px] object-cover transition-transform duration-500 group-hover:scale-105"
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
       <div className="p-4 flex flex-col flex-1 justify-between">
-        <div className="font-bold mb-2.5">{title}</div>
-        {meta && <div className="text-xs text-gray-400 mb-1">{meta}</div>}
-        <a href={link} target="_blank" rel="noopener noreferrer" className="btn-action mt-2.5">
+        <div className="font-bold text-sm leading-tight mb-2 line-clamp-2">{title}</div>
+        {meta && <div className="text-[11px] text-gray-400 mb-1">{meta}</div>}
+        <a href={link} target="_blank" rel="noopener noreferrer" className="btn-action mt-auto">
           {linkText || 'ABRIR'}
         </a>
       </div>
@@ -47,41 +61,65 @@ function Card({ img, title, meta, link, linkText }: {
   )
 }
 
-// --- Games ---
+// ==================== GAMES SECTION (direct API, no proxy) ====================
 function GamesSection() {
   const [games, setGames] = useState<Game[]>([])
   const [filter, setFilter] = useState('all')
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
   useEffect(() => {
+    let cancelled = false
     const fetchGames = async () => {
       try {
-        const proxyUrl = 'https://api.codetabs.com/v1/proxy?quest='
-        const targetUrl = 'https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity'
-        const r = await fetch(proxyUrl + encodeURIComponent(targetUrl))
-        if (!r.ok) throw new Error('Error Proxy')
-        const d = await r.json()
-        setGames(d)
+        // GamerPower supports CORS directly — no proxy needed!
+        const r = await fetch('https://www.gamerpower.com/api/giveaways?platform=pc&type=game&sort-by=popularity')
+        if (!r.ok) throw new Error('Error fetching games')
+        const d: Game[] = await r.json()
+        if (!cancelled) setGames(d)
       } catch {
-        setError(true)
+        if (!cancelled) setError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
       }
     }
     fetchGames()
+    return () => { cancelled = true }
   }, [])
 
   const filtered = filter === 'all'
-    ? games.slice(0, 4)
-    : games.filter(g => g.platforms.toLowerCase().includes(filter) || g.title.toLowerCase().includes(filter)).slice(0, 4)
+    ? games.slice(0, 6)
+    : games.filter(g =>
+        g.platforms.toLowerCase().includes(filter) ||
+        g.title.toLowerCase().includes(filter)
+      ).slice(0, 6)
+
+  if (loading) {
+    return (
+      <div className="grid-base">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="card">
+            <div className="skeleton h-[180px] rounded-none" />
+            <div className="p-4 space-y-2">
+              <div className="skeleton h-4 w-3/4" />
+              <div className="skeleton h-3 w-1/2" />
+              <div className="skeleton h-9 w-full mt-2" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   if (error) {
     return (
-      <div className="col-span-full text-center p-5 border border-dashed border-red-500 rounded-xl">
-        <i className="fas fa-shield-alt text-3xl text-red-500 mb-2.5" />
-        <h3 className="text-red-500 m-1">Bloqueador Detectado</h3>
-        <p className="text-gray-300 text-sm">Tu DNS o Adblock impide cargar la lista automática.</p>
+      <div className="text-center p-6 border border-dashed border-red-500/50 rounded-xl bg-red-500/5 max-w-lg mx-auto">
+        <i className="fas fa-shield-alt text-3xl text-red-500 mb-3" />
+        <h3 className="text-red-400 font-bold m-0">Juegos no disponibles</h3>
+        <p className="text-gray-400 text-sm mt-1 mb-4">No se pudieron cargar los juegos. Intenta desactivar el bloqueador para este sitio.</p>
         <a href="https://www.gamerpower.com/giveaways" target="_blank" rel="noopener noreferrer"
-          className="inline-block mt-2.5 px-8 py-2.5 bg-neon-pink text-white border-none rounded-lg font-bold no-underline">
-          VER JUEGOS EN WEB EXTERNA <i className="fas fa-external-link-alt" />
+          className="inline-block px-6 py-2.5 bg-neon-pink text-white rounded-lg font-bold text-sm no-underline hover:brightness-110 transition-all">
+          VER EN GAMERPOWER <i className="fas fa-external-link-alt ml-1" />
         </a>
       </div>
     )
@@ -89,8 +127,8 @@ function GamesSection() {
 
   return (
     <>
-      <div className="flex justify-center gap-2.5 mb-5 flex-wrap">
-        {['all', 'steam', 'epic'].map((f) => (
+      <div className="flex justify-center gap-2 mb-5 flex-wrap">
+        {['all', 'steam', 'epic', 'gog'].map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`filter-btn ${filter === f ? 'active' : ''}`}
           >
@@ -98,74 +136,216 @@ function GamesSection() {
           </button>
         ))}
       </div>
-      <div className="grid-base">
-        {filtered.map((g, i) => (
-          <Card key={i} img={g.image} title={g.title} meta={g.platforms} link={g.open_giveaway_url} linkText="GRATIS" />
-        ))}
-      </div>
-    </>
-  )
-}
-
-// --- Anime ---
-function AnimeSection() {
-  const [animeList, setAnimeList] = useState<Anime[]>([])
-  const [hidden, setHidden] = useState<Anime[]>([])
-  const [expanded, setExpanded] = useState(false)
-
-  useEffect(() => {
-    fetch('https://api.jikan.moe/v4/seasons/now?limit=20')
-      .then(r => r.json())
-      .then(d => {
-        if (d.data) {
-          setAnimeList(d.data.slice(0, 4))
-          setHidden(d.data.slice(4))
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const display = expanded ? [...animeList, ...hidden] : animeList
-
-  return (
-    <>
-      <div className="grid-base">
-        {display.map((a, i) => (
-          <Card key={i} img={a.images.jpg.large_image_url} title={a.title}
-            meta={<><i className="far fa-clock" /> {DAY_MAP[a.broadcast.day] || 'Por definir'}</> as any}
-            link={a.url} linkText="INFO"
-          />
-        ))}
-      </div>
-      {!expanded && hidden.length > 0 && (
-        <div className="text-center w-full mt-5">
-          <button onClick={() => setExpanded(true)}
-            className="bg-transparent border border-neon-cyan text-neon-cyan px-5 py-2.5 rounded-full cursor-pointer">
-            VER MÁS ANIMES
-          </button>
+      {filtered.length === 0 ? (
+        <p className="text-gray-500 text-center">No hay juegos gratis para este filtro.</p>
+      ) : (
+        <div className="grid-base">
+          {filtered.map((g, i) => (
+            <Card key={i} img={g.image} title={g.title}
+              meta={`${g.platforms}${g.description ? ' · ' + g.description.substring(0, 60) + '…' : ''}`}
+              link={g.open_giveaway_url} linkText="GRATIS"
+            />
+          ))}
         </div>
       )}
     </>
   )
 }
 
-// --- RSS News ---
-function RSSSection({ url }: { url: string }) {
-  const [items, setItems] = useState<RSSItem[]>([])
+// ==================== ANIME SCHEDULE BY DAY ====================
+const DAYS = [
+  { en: 'monday', es: 'LUNES' },
+  { en: 'tuesday', es: 'MARTES' },
+  { en: 'wednesday', es: 'MIÉRCOLES' },
+  { en: 'thursday', es: 'JUEVES' },
+  { en: 'friday', es: 'VIERNES' },
+  { en: 'saturday', es: 'SÁBADO' },
+  { en: 'sunday', es: 'DOMINGO' },
+]
+
+function AnimeSchedule() {
+  const [schedule, setSchedule] = useState<ScheduleDay[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [selectedDay, setSelectedDay] = useState<string>('monday')
 
   useEffect(() => {
-    fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.items) setItems(d.items.slice(0, 3))
-      })
-      .catch(() => {})
+    let cancelled = false
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+    const fetchSchedule = async () => {
+      try {
+        const results: ScheduleDay[] = []
+        for (const day of DAYS) {
+          await delay(350) // Safe rate limit: ~3 requests/second
+          const r = await fetch(`https://api.jikan.moe/v4/schedules?filter=${day.en}&limit=6`)
+          if (!r.ok) throw new Error('Error fetching schedule')
+          const d = await r.json()
+          results.push({
+            day: day.en,
+            dayEs: day.es,
+            animes: (d.data || []) as Anime[],
+          })
+        }
+        if (!cancelled) setSchedule(results)
+      } catch {
+        if (!cancelled) setError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchSchedule()
+    return () => { cancelled = true }
+  }, [])
+
+  const currentDay = schedule.find(d => d.day === selectedDay)
+
+  if (loading) {
+    return (
+      <div className="text-center">
+        <div className="flex justify-center gap-2 mb-5 flex-wrap">
+          {DAYS.map(d => (
+            <div key={d.en} className="skeleton h-8 w-20 rounded-full" />
+          ))}
+        </div>
+        <div className="grid-base">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="card">
+              <div className="skeleton h-[180px] rounded-none" />
+              <div className="p-4 space-y-2">
+                <div className="skeleton h-4 w-3/4" />
+                <div className="skeleton h-9 w-full mt-2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center p-6 border border-dashed border-yellow-500/50 rounded-xl bg-yellow-500/5 max-w-lg mx-auto">
+        <i className="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-3" />
+        <h3 className="text-yellow-400 font-bold m-0">Calendario no disponible</h3>
+        <p className="text-gray-400 text-sm mt-1">La API de Jikan está temporalmente limitada. Intenta recargar la página.</p>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      {/* Day selector pills */}
+      <div className="flex justify-center gap-1.5 mb-5 flex-wrap">
+        {DAYS.map(d => (
+          <button key={d.en} onClick={() => setSelectedDay(d.en)}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-200 ${
+              selectedDay === d.en
+                ? 'bg-neon-cyan text-black'
+                : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
+            }`}
+          >
+            {d.es}
+          </button>
+        ))}
+      </div>
+
+      {/* Anime cards for selected day */}
+      {currentDay && currentDay.animes.length === 0 ? (
+        <p className="text-gray-500 text-center">No hay animes programados para este día.</p>
+      ) : currentDay && (
+        <div className="grid-base">
+          {currentDay.animes.map((a, i) => (
+            <div key={i} className="card group">
+              <div className="relative overflow-hidden">
+                <img
+                  src={a.images.jpg.large_image_url}
+                  alt={a.title}
+                  className="w-full h-[180px] object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  onError={(e) => { (e.target as HTMLImageElement).src = 'https://placehold.co/600x400/1a1a24/00ffcc?text=No+Image' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                {a.score && (
+                  <span className="absolute top-2 right-2 bg-black/70 text-yellow-400 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    ★ {a.score}
+                  </span>
+                )}
+              </div>
+              <div className="p-3 flex flex-col flex-1 justify-between">
+                <div className="font-bold text-xs leading-tight mb-1 line-clamp-2">{a.title}</div>
+                <div className="flex items-center gap-2 text-[10px] text-gray-500 mb-2">
+                  {a.type && <span className="bg-gray-800 px-1.5 py-0.5 rounded">{a.type}</span>}
+                  {a.episodes && <span>{a.episodes} ep.</span>}
+                </div>
+                <a href={a.url} target="_blank" rel="noopener noreferrer" className="btn-action text-xs py-2">
+                  <i className="fas fa-info-circle" /> INFO
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+// ==================== RSS NEWS ====================
+function RSSSection({ url, title, icon }: { url: string; title: string; icon: string }) {
+  const [items, setItems] = useState<RSSItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    const fetchNews = async () => {
+      try {
+        // Try direct fetch first, fallback to rss2json
+        const r = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`)
+        if (!r.ok) throw new Error('Error')
+        const d = await r.json()
+        if (!cancelled && d.items) setItems(d.items.slice(0, 4))
+      } catch {
+        if (!cancelled) setError(true)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+    fetchNews()
+    return () => { cancelled = true }
   }, [url])
+
+  if (loading) {
+    return (
+      <div className="grid-base">
+        {[1, 2].map(i => (
+          <div key={i} className="card">
+            <div className="skeleton h-[140px] rounded-none" />
+            <div className="p-4 space-y-2">
+              <div className="skeleton h-4 w-full" />
+              <div className="skeleton h-3 w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (error || items.length === 0) {
+    return (
+      <div className="text-center p-6 border border-dashed border-gray-700 rounded-xl bg-gray-800/20 max-w-lg mx-auto">
+        <i className={`fas ${icon} text-2xl text-gray-500 mb-2`} />
+        <p className="text-gray-500 text-sm">Noticias no disponibles en este momento.</p>
+        <p className="text-gray-600 text-xs mt-1">Puedes revisar directamente en las fuentes.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="grid-base">
       {items.map((item, i) => {
-        const img = item.thumbnail || item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] || 'https://placehold.co/600x400/1a1a24/00ffcc?text=News'
+        const img = item.thumbnail ||
+          item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
+          'https://placehold.co/600x400/1a1a24/00ffcc?text=' + encodeURIComponent(title)
         return (
           <Card key={i} img={img} title={item.title} link={item.link} linkText="LEER" />
         )
@@ -174,7 +354,7 @@ function RSSSection({ url }: { url: string }) {
   )
 }
 
-// --- Event Hero ---
+// ==================== EVENT HERO ====================
 function EventHero() {
   const e = loadEvento()
   if (!e.activo) return null
@@ -193,46 +373,47 @@ function EventHero() {
   const shareEvent = () => {
     if (navigator.share) {
       navigator.share({ title: e.titulo, text: `¡Nos vemos en ${e.titulo}!`, url: window.location.href })
+        .catch(() => {})
     } else {
-      alert('Link copiado')
+      navigator.clipboard?.writeText(window.location.href)
+        .then(() => alert('Link copiado al portapapeles'))
+        .catch(() => alert('Comparte este link con tus amigos'))
     }
   }
 
   return (
-    <div className="bg-gradient-to-b from-bg-card to-bg-dark border-2 border-neon-pink rounded-2xl overflow-hidden mb-10 text-left shadow-lg"
-      style={{ boxShadow: '0 0 20px rgba(255, 0, 85, 0.2)' }}
-    >
+    <div className="bg-gradient-to-b from-bg-card to-bg-dark border-2 border-neon-pink/70 rounded-2xl overflow-hidden mb-10 text-left neon-glow-pink">
       {e.flyer && (
-        <img src={e.flyer} alt="Flyer" className="w-full h-auto max-h-[600px] object-contain"
+        <img src={e.flyer} alt="Flyer" className="w-full h-auto max-h-[500px] object-contain"
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
         />
       )}
-      <div className="p-5">
-        <h2 className="text-neon-cyan text-3xl uppercase font-extrabold mb-2.5 leading-tight">{e.titulo}</h2>
-        <div className="text-sm text-gray-300 mb-4 flex flex-col gap-2">
-          <span><i className="fas fa-map-marker-alt text-neon-pink w-5 mr-1" /> {e.ubicacion}</span>
-          <span><i className="far fa-calendar-alt text-neon-pink w-5 mr-1" /> {startDate.toLocaleDateString()}</span>
-          <span><i className="far fa-clock text-neon-pink w-5 mr-1" /> {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} hrs</span>
+      <div className="p-5 lg:p-8">
+        <h2 className="text-neon-cyan text-2xl lg:text-3xl uppercase font-extrabold mb-3 leading-tight">{e.titulo}</h2>
+        <div className="text-sm text-gray-300 mb-4 flex flex-col gap-1.5">
+          <span><i className="fas fa-map-marker-alt text-neon-pink w-5 text-center mr-1" /> {e.ubicacion}</span>
+          <span><i className="far fa-calendar-alt text-neon-pink w-5 text-center mr-1" /> {startDate.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
+          <span><i className="far fa-clock text-neon-pink w-5 text-center mr-1" /> {startDate.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' })} hrs</span>
         </div>
         <p className="text-gray-300 mb-4 leading-relaxed">{e.descripcion}</p>
         {e.cronograma && (
-          <div className="bg-white/5 p-2.5 rounded-lg text-sm text-gray-400 mb-4 border-l-4 border-neon-cyan">
+          <div className="bg-white/5 p-3 rounded-lg text-sm text-gray-400 mb-5 border-l-4 border-neon-cyan">
             <i className="fas fa-list-ul" /> {e.cronograma}
           </div>
         )}
         <div className="flex gap-2.5 flex-wrap">
           <button onClick={addToCalendar}
-            className="flex-1 py-3 px-4 bg-neon-cyan text-black border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
+            className="flex-1 min-w-[120px] py-3 px-4 bg-neon-cyan text-black border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
             <i className="far fa-calendar-plus" /> AGENDAR
           </button>
           {e.mapaLink && (
             <a href={e.mapaLink} target="_blank" rel="noopener noreferrer"
-              className="flex-1 py-3 px-4 bg-gray-800 border border-gray-600 text-white rounded-lg font-bold no-underline flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
+              className="flex-1 min-w-[120px] py-3 px-4 bg-gray-800 border border-gray-600 text-white rounded-lg font-bold no-underline flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
               <i className="fas fa-map" /> MAPA
             </a>
           )}
           <button onClick={shareEvent}
-            className="flex-1 py-3 px-4 bg-neon-pink text-white border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
+            className="flex-1 min-w-[120px] py-3 px-4 bg-neon-pink text-white border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
             <i className="fas fa-share-alt" /> COMPARTIR
           </button>
         </div>
@@ -241,23 +422,46 @@ function EventHero() {
   )
 }
 
-// --- Main Page ---
+// ==================== MAIN PAGE ====================
 export default function HomePage() {
   return (
-    <div className="px-5 max-w-[1200px] mx-auto">
+    <div className="px-5 max-w-6xl mx-auto">
       <EventHero />
 
-      <h2 className="section-title">🎁 Juegos Gratis</h2>
-      <GamesSection />
+      {/* Games */}
+      <section className="mb-12">
+        <h2 className="section-title">
+          <i className="fas fa-gift text-neon-pink mr-2" /> Juegos Gratis
+        </h2>
+        <GamesSection />
+      </section>
 
-      <h2 className="section-title">📅 Calendario Anime</h2>
-      <AnimeSection />
+      {/* Anime Schedule */}
+      <section className="mb-12">
+        <h2 className="section-title">
+          <i className="fas fa-calendar-week text-neon-pink mr-2" /> Calendario Anime
+        </h2>
+        <p className="text-gray-500 text-sm text-center mb-4 -mt-4">
+          Animes en emisión organizados por día de estreno
+        </p>
+        <AnimeSchedule />
+      </section>
 
-      <h2 className="section-title">🎎 Noticias Anime</h2>
-      <RSSSection url="https://somoskudasai.com/feed/" />
+      {/* Anime News */}
+      <section className="mb-12">
+        <h2 className="section-title">
+          <i className="fas fa-newspaper text-neon-pink mr-2" /> Noticias Anime
+        </h2>
+        <RSSSection url="https://somoskudasai.com/feed/" title="Anime News" icon="fa-newspaper" />
+      </section>
 
-      <h2 className="section-title">📰 Radar Geek</h2>
-      <RSSSection url="https://latam.ign.com/feed.xml" />
+      {/* Geek News */}
+      <section className="mb-12">
+        <h2 className="section-title">
+          <i className="fas fa-satellite-dish text-neon-pink mr-2" /> Radar Geek
+        </h2>
+        <RSSSection url="https://latam.ign.com/feed.xml" title="Radar Geek" icon="fa-satellite-dish" />
+      </section>
     </div>
   )
 }

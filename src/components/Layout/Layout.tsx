@@ -5,6 +5,7 @@ import Particles from '../ui/Particles'
 import Mascot from '../ui/Mascot'
 import MusicPlayer from '../ui/MusicPlayer'
 import InstallButton from '../ui/InstallButton'
+import Footer from './Footer'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -174,6 +175,8 @@ export default function Layout({ children }: LayoutProps) {
       <main className={`min-h-[60vh] ${showHeader ? '' : 'pt-16 lg:pt-20'} pb-24 lg:pb-12`}>
         {children}
       </main>
+
+      <Footer />
 
       <Mascot />
       <MusicPlayer />
