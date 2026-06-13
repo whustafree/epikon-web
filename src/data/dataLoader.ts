@@ -21,25 +21,34 @@ export function loadEvento(): Evento {
 
 export function loadEquipo(): Miembro[] {
   const data = getData()
-  if (data?.equipo && data.equipo.length > 0) return data.equipo
+  if (hasAdminData()) return data?.equipo ?? []
   return config.social.equipo.miembros.filter(m => m.activo)
 }
 
 export function loadFaq(): FAQ[] {
   const data = getData()
-  if (data?.faq && data.faq.length > 0) return data.faq
+  if (hasAdminData()) return data?.faq ?? []
   return config.social.infoComunidad.faq
+}
+
+function hasAdminData(): boolean {
+  try {
+    return localStorage.getItem('epikon-admin-data') !== null
+  } catch {
+    return false
+  }
 }
 
 export function loadGaleriaActual(): string[] {
   const data = getData()
-  if (data?.galeriaActual && data.galeriaActual.length > 0) return data.galeriaActual
+  // If admin has saved data, use it even if empty (they may have deleted all photos)
+  if (hasAdminData()) return data?.galeriaActual ?? []
   return config.social.galeriaCompleta.actual
 }
 
 export function loadGaleriaAnterior(): string[] {
   const data = getData()
-  if (data?.galeriaAnterior && data.galeriaAnterior.length > 0) return data.galeriaAnterior
+  if (hasAdminData()) return data?.galeriaAnterior ?? []
   return config.social.galeriaCompleta.anterior
 }
 

@@ -352,6 +352,17 @@ export default function AdminPage() {
           <i className="fas fa-save" /> {saved ? '✓ GUARDADO' : 'GUARDAR CAMBIOS'}
         </button>
         <p className="text-gray-500 text-sm mt-2">Los datos se guardan en localStorage del navegador</p>
+
+        <button onClick={() => {
+          if (confirm('¿Restablecer valores por defecto? Se perderán todos tus cambios.')) {
+            adminStore.clear()
+            clearDataCache()
+            window.location.reload()
+          }
+        }}
+          className="mt-4 px-6 py-2 bg-red-900/30 border border-red-700/50 text-red-400 text-sm rounded-xl hover:bg-red-900/50 transition-all">
+          <i className="fas fa-undo-alt" /> Restablecer valores por defecto
+        </button>
       </div>
     </div>
   )
