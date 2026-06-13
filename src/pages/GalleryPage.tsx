@@ -34,14 +34,6 @@ export default function GalleryPage() {
         </div>
       )}
 
-      {/* Admin link to upload photos */}
-      <div className="text-center mt-8 mb-4">
-        <a href="/admin"
-          className="inline-block px-6 py-3 bg-bg-card border border-gray-600 text-gray-400 rounded-xl text-sm hover:border-neon-cyan hover:text-neon-cyan transition-all">
-          <i className="fas fa-cog" /> Administrar galería
-        </a>
-      </div>
-
       {/* Lightbox */}
       {lightbox && (
         <div

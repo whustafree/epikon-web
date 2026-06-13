@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { config } from '../../data/config'
 import Particles from '../ui/Particles'
@@ -16,7 +16,6 @@ const navItems = [
   { path: '/comunidad', label: 'Comunidad', icon: 'fa-users' },
   { path: '/galeria', label: 'Galería', icon: 'fa-images' },
   { path: '/postulacion', label: 'Postular', icon: 'fa-store' },
-  { path: '/admin', label: 'Admin', icon: 'fa-cog' },
 ]
 
 // Pages that show the header banner
@@ -28,6 +27,17 @@ export default function Layout({ children }: LayoutProps) {
   const [logoLoaded, setLogoLoaded] = useState(false)
   const [bgIndex, setBgIndex] = useState(0)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const logoClickRef = useRef(0)
+
+  const handleLogoClick = () => {
+    logoClickRef.current++
+    if (logoClickRef.current >= 5) {
+      logoClickRef.current = 0
+      navigate('/admin')
+      return
+    }
+    setTimeout(() => { logoClickRef.current = 0 }, 1500)
+  }
 
   const showHeader = HEADER_PAGES.includes(location.pathname)
 
@@ -71,7 +81,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="max-w-6xl mx-auto w-full flex items-center justify-between px-6 h-16">
           {/* Logo */}
-          <button onClick={() => navigate('/')} className="flex items-center gap-3 bg-none border-none cursor-pointer">
+          <button onClick={handleLogoClick} className="flex items-center gap-3 bg-none border-none cursor-pointer">
             <img src={config.imagenes.logo} alt="EPIKON" className="h-9 w-auto" />
           </button>
 
@@ -108,7 +118,7 @@ export default function Layout({ children }: LayoutProps) {
         style={{ paddingTop: 'env(safe-area-inset-top)' }}
       >
         <div className="flex items-center justify-between px-4 h-14">
-          <button onClick={() => navigate('/')} className="flex items-center gap-2 bg-none border-none cursor-pointer">
+          <button onClick={handleLogoClick} className="flex items-center gap-2 bg-none border-none cursor-pointer">
             <img src={config.imagenes.logo} alt="EPIKON" className="h-8 w-auto" />
           </button>
 
