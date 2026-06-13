@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { config } from '../../data/config'
+import { loadRedes, loadImagenes } from '../../data/dataLoader'
 import Particles from '../ui/Particles'
 import Mascot from '../ui/Mascot'
 import MusicPlayer from '../ui/MusicPlayer'
@@ -41,15 +41,18 @@ export default function Layout({ children }: LayoutProps) {
 
   const showHeader = HEADER_PAGES.includes(location.pathname)
 
+  const redes = loadRedes()
+  const imagenes = loadImagenes()
+
   useEffect(() => {
-    const bgs = config.imagenes.fondos
+    const bgs = imagenes.fondos
     if (bgs.length > 1) {
       const interval = setInterval(() => {
         setBgIndex((prev) => (prev + 1) % bgs.length)
       }, 6000)
       return () => clearInterval(interval)
     }
-  }, [])
+  }, [imagenes.fondos])
 
   // Close mobile menu on navigation
   useEffect(() => {
@@ -58,7 +61,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleNav = (path: string) => {
     if (path === '/instagram') {
-      window.open(config.redes.instagram, '_blank', 'noopener')
+      window.open(redes.instagram, '_blank', 'noopener')
     } else {
       navigate(path)
     }
@@ -69,7 +72,7 @@ export default function Layout({ children }: LayoutProps) {
     return location.pathname.startsWith(path)
   }
 
-  const currentBg = config.imagenes.fondos[bgIndex] || ''
+  const currentBg = imagenes.fondos[bgIndex] || ''
 
   return (
     <>
@@ -82,7 +85,7 @@ export default function Layout({ children }: LayoutProps) {
         <div className="max-w-6xl mx-auto w-full flex items-center justify-between px-6 h-16">
           {/* Logo */}
           <button onClick={handleLogoClick} className="flex items-center gap-3 bg-none border-none cursor-pointer">
-            <img src={config.imagenes.logo} alt="EPIKON" className="h-9 w-auto" />
+            <img src={imagenes.logo} alt="EPIKON" className="h-9 w-auto" />
           </button>
 
           {/* Nav links */}
@@ -102,7 +105,7 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             ))}
             <a
-              href={config.redes.instagram}
+              href={redes.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="ml-2 px-4 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-500 text-white hover:brightness-110 transition-all flex items-center gap-2"
@@ -119,7 +122,7 @@ export default function Layout({ children }: LayoutProps) {
       >
         <div className="flex items-center justify-between px-4 h-14">
           <button onClick={handleLogoClick} className="flex items-center gap-2 bg-none border-none cursor-pointer">
-            <img src={config.imagenes.logo} alt="EPIKON" className="h-8 w-auto" />
+            <img src={imagenes.logo} alt="EPIKON" className="h-8 w-auto" />
           </button>
 
           <button
@@ -149,7 +152,7 @@ export default function Layout({ children }: LayoutProps) {
               </button>
             ))}
             <a
-              href={config.redes.instagram}
+              href={redes.instagram}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-5 py-3.5 text-sm font-semibold text-pink-400 hover:bg-white/5 transition-all"
@@ -169,7 +172,7 @@ export default function Layout({ children }: LayoutProps) {
         >
           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/10 to-bg-dark" />
           <img
-            src={config.imagenes.logo}
+            src={imagenes.logo}
             alt="Logo Epikon"
             className={`w-[65%] max-w-[320px] lg:max-w-[400px] relative z-10 animate-float transition-opacity duration-500 ${
               logoLoaded ? 'opacity-100' : 'opacity-0'
@@ -208,9 +211,8 @@ export default function Layout({ children }: LayoutProps) {
               <i className={`fas ${item.icon} text-lg`} />
               <span className="text-[10px] font-semibold leading-tight">{item.label}</span>
             </button>
-          ))}
-          <a
-            href={config.redes.instagram}
+          ))}            <a
+            href={redes.instagram}
             target="_blank"
             rel="noopener noreferrer"
             className="flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg text-gray-500 hover:text-pink-400 transition-all"

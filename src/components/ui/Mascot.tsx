@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { config } from '../../data/config'
+import { loadMascota } from '../../data/dataLoader'
 
 export default function Mascot() {
   const [dismissed, setDismissed] = useState(false)
@@ -7,7 +7,7 @@ export default function Mascot() {
   const [showBubble, setShowBubble] = useState(false)
   const [phraseIndex, setPhraseIndex] = useState(0)
 
-  const m = config.mascota
+  const m = loadMascota()
 
   const cyclePhrase = useCallback(() => {
     if (dismissed) return

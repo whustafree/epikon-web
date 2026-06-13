@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { adminStore } from '../data/adminStore'
 import { clearDataCache } from '../data/dataLoader'
-import type { Miembro, FAQ } from '../data/config'
+import type { Miembro, FAQ, Mascota } from '../data/config'
 
 const ADMIN_PASSWORD = 'epikon2025'
 
@@ -9,7 +9,7 @@ export default function AdminPage() {
   const [loggedIn, setLoggedIn] = useState(false)
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'evento' | 'staff' | 'faq' | 'galeria'>('evento')
+  const [tab, setTab] = useState<'evento' | 'staff' | 'faq' | 'galeria' | 'ajustes' | 'sorteo'>('evento')
   const [saved, setSaved] = useState(false)
 
   // Evento state
@@ -23,6 +23,21 @@ export default function AdminPage() {
   const [galeriaAnterior, setGaleriaAnterior] = useState<string[]>(adminStore.load().galeriaAnterior)
   // New photo URL input
   const [newPhoto, setNewPhoto] = useState('')
+  // Ajustes state
+  const load = adminStore.load()
+  const [redes, setRedes] = useState(load.redes)
+  const [imagenes, setImagenes] = useState(load.imagenes)
+  const [musica, setMusica] = useState(load.musica)
+  const [mascota, setMascota] = useState<Mascota>(load.mascota)
+  const [nuevaFrase, setNuevaFrase] = useState('')
+  // Sorteo state
+  const [sorteo, setSorteo] = useState(load.sorteo)
+  // Instagram Feed state
+  const [instagramFeed, setInstagramFeed] = useState(load.instagramFeed)
+  // Cosplay Gallery state
+  const [cosplayGallery, setCosplayGallery] = useState(load.cosplayGallery)
+  // Info Comunidad state
+  const [infoComunidad, setInfoComunidad] = useState(load.infoComunidad)
 
   const handleLogin = () => {
     if (password === ADMIN_PASSWORD) {
@@ -40,6 +55,14 @@ export default function AdminPage() {
       faq,
       galeriaActual,
       galeriaAnterior,
+      redes,
+      imagenes,
+      musica,
+      mascota,
+      sorteo,
+      instagramFeed,
+      cosplayGallery,
+      infoComunidad,
     })
     clearDataCache()
     setSaved(true)
@@ -134,9 +157,9 @@ export default function AdminPage() {
 
       {/* Tabs */}
       <div className="flex justify-center gap-2 flex-wrap mb-8">
-        {(['evento', 'staff', 'faq', 'galeria'] as const).map(t => (
+        {(['evento', 'staff', 'faq', 'galeria', 'ajustes', 'sorteo'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`px-5 py-2 rounded-full text-sm font-bold transition-all ${
+            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
               tab === t
                 ? 'bg-neon-cyan text-black'
                 : 'bg-bg-card border border-gray-600 text-gray-400 hover:text-white'
@@ -146,6 +169,8 @@ export default function AdminPage() {
             {t === 'staff' && '🛡️ Staff'}
             {t === 'faq' && '❓ FAQ'}
             {t === 'galeria' && '📸 Galería'}
+            {t === 'ajustes' && '⚙️ Ajustes'}
+            {t === 'sorteo' && '🎁 Sorteo'}
           </button>
         ))}
       </div>
@@ -341,6 +366,162 @@ export default function AdminPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ajustes Tab */}
+      {tab === 'ajustes' && (
+        <div className="space-y-6">
+          {/* Redes Sociales */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <h2 className="text-neon-cyan text-xl mb-4"><i className="fas fa-share-alt" /> Redes Sociales</h2>
+            <label className="text-gray-400 text-sm uppercase block mb-1">URL de Instagram</label>
+            <input value={redes.instagram} onChange={e => setRedes(prev => ({ ...prev, instagram: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+          </div>
+
+          {/* Imágenes */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <h2 className="text-neon-cyan text-xl mb-4"><i className="fas fa-image" /> Imágenes del Sitio</h2>
+            <div className="space-y-3">
+              <div>
+                <label className="text-gray-400 text-sm uppercase block mb-1">Logo URL</label>
+                <input value={imagenes.logo} onChange={e => setImagenes(prev => ({ ...prev, logo: e.target.value }))}
+                  className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+                {imagenes.logo && <img src={imagenes.logo} className="h-12 mt-2 rounded" />}
+              </div>
+              <div>
+                <label className="text-gray-400 text-sm uppercase block mb-1">Fondo URL</label>
+                <div className="flex gap-2 mb-2">
+                  <input value={imagenes.fondos[0] || ''} onChange={e => setImagenes(prev => ({ ...prev, fondos: [e.target.value] }))}
+                    className="flex-1 px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Música */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <h2 className="text-neon-cyan text-xl mb-4"><i className="fas fa-music" /> Música / Radio</h2>
+            <label className="text-gray-400 text-sm uppercase block mb-1">URL del Stream</label>
+            <input value={musica.streamUrl} onChange={e => setMusica(prev => ({ ...prev, streamUrl: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+          </div>
+
+          {/* Mascota */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-neon-cyan text-xl"><i className="fas fa-dog" /> Mascota / Guía</h2>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" checked={mascota.activo} onChange={e => setMascota(prev => ({ ...prev, activo: e.target.checked }))}
+                  className="accent-neon-cyan w-5 h-5" />
+                <span className={mascota.activo ? 'text-green-400' : 'text-red-400'}>{mascota.activo ? 'Visible' : 'Oculta'}</span>
+              </label>
+            </div>
+            <div className="mb-3">
+              <label className="text-gray-400 text-sm uppercase block mb-1">Imagen URL</label>
+              <input value={mascota.imagenPng} onChange={e => setMascota(prev => ({ ...prev, imagenPng: e.target.value }))}
+                className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+            </div>
+            <div className="mb-3">
+              <label className="text-gray-400 text-sm uppercase block mb-1">Tiempo entre frases (ms)</label>
+              <input type="number" value={mascota.tiempoEntreFrases} onChange={e => setMascota(prev => ({ ...prev, tiempoEntreFrases: Number(e.target.value) }))}
+                className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-gray-400 text-sm uppercase">Frases</label>
+                <div className="flex gap-2">
+                  <input placeholder="Nueva frase…" value={nuevaFrase} onChange={e => setNuevaFrase(e.target.value)}
+                    className="px-3 py-1.5 rounded-lg bg-bg-dark border border-gray-600 text-white text-sm outline-none focus:border-neon-cyan w-48" />
+                  <button onClick={() => { if (nuevaFrase.trim()) { setMascota(prev => ({ ...prev, frases: [...prev.frases, nuevaFrase.trim()] })); setNuevaFrase('') } }}
+                    className="px-3 py-1.5 bg-neon-cyan text-black rounded-lg text-sm font-bold hover:brightness-110">+</button>
+                </div>
+              </div>
+              <div className="space-y-2">
+                {mascota.frases.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-bg-dark rounded-lg p-2 border border-gray-700">
+                    <span className="text-neon-cyan text-xs font-bold min-w-[20px]">#{i + 1}</span>
+                    <input value={f} onChange={e => setMascota(prev => ({ ...prev, frases: prev.frases.map((fr, idx) => idx === i ? e.target.value : fr) }))}
+                      className="flex-1 px-2 py-1 rounded bg-bg-card border border-gray-600 text-white text-sm outline-none focus:border-neon-cyan" />
+                    <button onClick={() => setMascota(prev => ({ ...prev, frases: prev.frases.filter((_, idx) => idx !== i) }))}
+                      className="text-red-500 text-xs hover:text-red-400 bg-none border-none cursor-pointer">
+                      <i className="fas fa-times" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Instagram Feed Toggle */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-neon-cyan text-xl"><i className="fab fa-instagram" /> Feed Instagram</h2>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" checked={instagramFeed.activo} onChange={e => setInstagramFeed(prev => ({ ...prev, activo: e.target.checked }))}
+                  className="accent-neon-cyan w-5 h-5" />
+                <span className={instagramFeed.activo ? 'text-green-400' : 'text-red-400'}>{instagramFeed.activo ? 'Visible' : 'Oculto'}</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Cosplay Gallery Toggle */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <h2 className="text-neon-cyan text-xl"><i className="fas fa-mask" /> Galería Cosplay</h2>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" checked={cosplayGallery.activo} onChange={e => setCosplayGallery(prev => ({ ...prev, activo: e.target.checked }))}
+                  className="accent-neon-cyan w-5 h-5" />
+                <span className={cosplayGallery.activo ? 'text-green-400' : 'text-red-400'}>{cosplayGallery.activo ? 'Visible' : 'Oculta'}</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Info Comunidad Toggle */}
+          <div className="bg-bg-card border border-gray-700 rounded-2xl p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-neon-cyan text-xl"><i className="fas fa-book" /> Guía de la Comunidad</h2>
+                <p className="text-gray-500 text-sm mt-1">Controla la sección completa de guías y FAQ</p>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                <input type="checkbox" checked={infoComunidad.activo} onChange={e => setInfoComunidad(prev => ({ ...prev, activo: e.target.checked }))}
+                  className="accent-neon-cyan w-5 h-5" />
+                <span className={infoComunidad.activo ? 'text-green-400' : 'text-red-400'}>{infoComunidad.activo ? 'Visible' : 'Oculta'}</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sorteo Tab */}
+      {tab === 'sorteo' && (
+        <div className="bg-bg-card border border-gray-700 rounded-2xl p-6 space-y-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-neon-cyan text-xl"><i className="fas fa-gift" /> Sorteo</h2>
+            <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+              <input type="checkbox" checked={sorteo.activo} onChange={e => setSorteo(prev => ({ ...prev, activo: e.target.checked }))}
+                className="accent-neon-cyan w-5 h-5" />
+              <span className={sorteo.activo ? 'text-green-400' : 'text-red-400'}>{sorteo.activo ? 'Activo' : 'Inactivo'}</span>
+            </label>
+          </div>
+          <div>
+            <label className="text-gray-400 text-sm uppercase block mb-1">Título</label>
+            <input value={sorteo.titulo} onChange={e => setSorteo(prev => ({ ...prev, titulo: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+          </div>
+          <div>
+            <label className="text-gray-400 text-sm uppercase block mb-1">Fecha de término</label>
+            <input value={sorteo.fechaTermino} onChange={e => setSorteo(prev => ({ ...prev, fechaTermino: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" placeholder="December 25, 2026 20:00:00" />
+          </div>
+          <div>
+            <label className="text-gray-400 text-sm uppercase block mb-1">Imagen del premio URL</label>
+            <input value={sorteo.imgPremio} onChange={e => setSorteo(prev => ({ ...prev, imgPremio: e.target.value }))}
+              className="w-full px-4 py-2 rounded-lg bg-bg-dark border border-gray-600 text-white outline-none focus:border-neon-cyan" />
+            {sorteo.imgPremio && <img src={sorteo.imgPremio} className="h-24 mt-2 rounded object-cover" />}
           </div>
         </div>
       )}

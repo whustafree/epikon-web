@@ -1,10 +1,11 @@
 import { useState, useRef, useCallback } from 'react'
-import { config } from '../../data/config'
+import { loadMusica } from '../../data/dataLoader'
 
 export default function MusicPlayer() {
   const audioRef = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const musica = loadMusica()
 
   const toggle = useCallback((e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest('.minimize-btn')) return
@@ -55,7 +56,7 @@ export default function MusicPlayer() {
           </button>
         </>
       )}
-      <audio ref={audioRef} src={config.musica.streamUrl} preload="none" />
+      <audio ref={audioRef} src={musica.streamUrl} preload="none" />
     </div>
   )
 }

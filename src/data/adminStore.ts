@@ -1,13 +1,22 @@
-import { config, type Miembro, type FAQ, type Evento } from './config'
+import { config, type Miembro, type FAQ, type Evento, type PostInstagram, type Cosplayer, type Guia, type Mascota } from './config'
 
 const STORAGE_KEY = 'epikon-admin-data'
 
-interface AdminData {
+export interface AdminData {
   evento: Evento
   equipo: Miembro[]
   faq: FAQ[]
   galeriaActual: string[]
   galeriaAnterior: string[]
+  // New sections
+  redes: { instagram: string }
+  imagenes: { logo: string; fondos: string[] }
+  musica: { streamUrl: string }
+  mascota: Mascota
+  sorteo: { activo: boolean; titulo: string; fechaTermino: string; imgPremio: string }
+  instagramFeed: { activo: boolean; posts: PostInstagram[] }
+  cosplayGallery: { activo: boolean; list: Cosplayer[] }
+  infoComunidad: { activo: boolean; titulo: string; guias: Guia[] }
 }
 
 function loadData(): AdminData {
@@ -22,6 +31,24 @@ function loadData(): AdminData {
     faq: [...config.social.infoComunidad.faq],
     galeriaActual: [...config.social.galeriaCompleta.actual],
     galeriaAnterior: [...config.social.galeriaCompleta.anterior],
+    redes: { ...config.redes },
+    imagenes: { ...config.imagenes, fondos: [...config.imagenes.fondos] },
+    musica: { ...config.musica },
+    mascota: { ...config.mascota, frases: [...config.mascota.frases] },
+    sorteo: { ...config.social.sorteo },
+    instagramFeed: {
+      activo: config.social.instagramFeed.activo,
+      posts: config.social.instagramFeed.posts.map(p => ({ ...p })),
+    },
+    cosplayGallery: {
+      activo: config.social.cosplayGallery.activo,
+      list: config.social.cosplayGallery.list.map(c => ({ ...c })),
+    },
+    infoComunidad: {
+      activo: config.social.infoComunidad.activo,
+      titulo: config.social.infoComunidad.titulo,
+      guias: config.social.infoComunidad.guias.map(g => ({ ...g })),
+    },
   }
 }
 

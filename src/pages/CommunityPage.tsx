@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { config } from '../data/config'
-import { loadEquipo, loadFaq } from '../data/dataLoader'
+import { loadEquipo, loadFaq, loadSorteo, loadInstagramFeed, loadCosplayGallery, loadInfoComunidad } from '../data/dataLoader'
 
 function SorteoSection() {
-  const s = config.social.sorteo
+  const s = loadSorteo()
   const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
@@ -31,7 +30,7 @@ function SorteoSection() {
   )
 }
 
-function StaffCard({ miembro }: { miembro: typeof config.social.equipo.miembros[0] }) {
+function StaffCard({ miembro }: { miembro: { activo: boolean; nombre: string; rol: string; foto: string; link: string } }) {
   return (
     <div className="card items-center text-center">
       <div className="p-5 flex flex-col items-center">
@@ -50,9 +49,12 @@ function StaffCard({ miembro }: { miembro: typeof config.social.equipo.miembros[
 }
 
 export default function CommunityPage() {
-  const s = config.social
   const miembros = loadEquipo()
   const faqList = loadFaq()
+  const sorteo = loadSorteo()
+  const instagramFeed = loadInstagramFeed()
+  const cosplayGallery = loadCosplayGallery()
+  const infoComunidad = loadInfoComunidad()
 
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
@@ -69,11 +71,11 @@ export default function CommunityPage() {
       )}
 
       {/* Community Guide */}
-      {s.infoComunidad.activo && (
+      {infoComunidad.activo && (
         <>
-          <h2 className="section-title">{s.infoComunidad.titulo}</h2>
+          <h2 className="section-title">{infoComunidad.titulo}</h2>
           <div className="grid-base mb-8">
-            {s.infoComunidad.guias.filter(g => g.activo).map((g, i) => (
+            {infoComunidad.guias.filter(g => g.activo).map((g, i) => (
               <a key={i} href={g.link}
                 className="card flex-1 min-w-[150px] no-underline"
                 style={{ background: 'linear-gradient(45deg, #1a1a24, #2a0a38)' }}
@@ -99,11 +101,11 @@ export default function CommunityPage() {
       )}
 
       {/* Instagram Feed */}
-      {s.instagramFeed.activo && (
+      {instagramFeed.activo && (
         <>
           <h2 className="section-title">📸 Feed Instagram</h2>
           <div className="grid-base mb-10">
-            {s.instagramFeed.posts.filter(p => p.activo).slice(0, 4).map((post, i) => {
+            {instagramFeed.posts.filter(p => p.activo).slice(0, 4).map((post, i) => {
               const isVideo = post.foto.endsWith('.mp4')
               return (
                 <div key={i} className="relative rounded-xl overflow-hidden border border-gray-700 flex-[0_1_200px] min-w-[150px] aspect-square bg-black">
@@ -124,14 +126,14 @@ export default function CommunityPage() {
       )}
 
       {/* Sorteo */}
-      {s.sorteo.activo && <SorteoSection />}
+      {sorteo.activo && <SorteoSection />}
 
       {/* Cosplay Gallery */}
-      {s.cosplayGallery.activo && (
+      {cosplayGallery.activo && (
         <>
           <h2 className="section-title">👥 Cosplayers</h2>
           <div className="grid-base">
-            {s.cosplayGallery.list.filter(i => i.activo).map((item, i) => (
+            {cosplayGallery.list.filter(i => i.activo).map((item, i) => (
               <div key={i} className="card">
                 <img src={item.foto} alt={item.usuario} className="w-full h-[300px] object-cover" />
                 <div className="p-4">

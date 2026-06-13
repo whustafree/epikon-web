@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
-import { config } from '../../data/config'
+import { loadRedes, loadImagenes } from '../../data/dataLoader'
 
 export default function Footer() {
   const year = new Date().getFullYear()
+  const redes = loadRedes()
+  const imagenes = loadImagenes()
 
   return (
     <footer className="relative mt-16 border-t border-gray-800 bg-gradient-to-b from-transparent to-bg-dark/80">
@@ -11,7 +13,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-3">
-              <img src={config.imagenes.logo} alt="EPIKON" className="h-10 w-auto" />
+              <img src={imagenes.logo} alt="EPIKON" className="h-10 w-auto" />
             </div>
             <p className="text-gray-500 text-sm leading-relaxed">
               Comunidad Geek de Rancagua. Eventos, torneos, cosplay y más.
@@ -33,7 +35,7 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-bold text-sm uppercase tracking-wider mb-4">Redes</h3>
             <div className="flex flex-col gap-2">
-              <a href={config.redes.instagram} target="_blank" rel="noopener noreferrer"
+              <a href={redes.instagram} target="_blank" rel="noopener noreferrer"
                 className="text-gray-400 hover:text-pink-400 text-sm transition-colors flex items-center gap-2">
                 <i className="fab fa-instagram" /> Instagram
               </a>
