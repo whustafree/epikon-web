@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { config } from '../data/config'
+import { loadGaleriaActual, loadGaleriaAnterior } from '../data/dataLoader'
 
 export default function GalleryPage() {
   const [type, setType] = useState<'actual' | 'anterior'>('actual')
   const [lightbox, setLightbox] = useState<string | null>(null)
 
-  const photos = config.social.galeriaCompleta[type] || []
+  const photos = type === 'actual' ? loadGaleriaActual() : loadGaleriaAnterior()
 
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
@@ -33,6 +33,14 @@ export default function GalleryPage() {
           ))}
         </div>
       )}
+
+      {/* Admin link to upload photos */}
+      <div className="text-center mt-8 mb-4">
+        <a href="/admin"
+          className="inline-block px-6 py-3 bg-bg-card border border-gray-600 text-gray-400 rounded-xl text-sm hover:border-neon-cyan hover:text-neon-cyan transition-all">
+          <i className="fas fa-cog" /> Administrar galería
+        </a>
+      </div>
 
       {/* Lightbox */}
       {lightbox && (

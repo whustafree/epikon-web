@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { config } from '../data/config'
+import { loadEquipo, loadFaq } from '../data/dataLoader'
 
 function SorteoSection() {
   const s = config.social.sorteo
@@ -50,15 +51,17 @@ function StaffCard({ miembro }: { miembro: typeof config.social.equipo.miembros[
 
 export default function CommunityPage() {
   const s = config.social
+  const miembros = loadEquipo()
+  const faqList = loadFaq()
 
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
       {/* Staff */}
-      {s.equipo.activo && (
+      {miembros.length > 0 && (
         <>
-          <h2 className="section-title">{s.equipo.titulo}</h2>
+          <h2 className="section-title">🛡️ Staff Epikon</h2>
           <div className="grid-base mb-10">
-            {s.equipo.miembros.filter(m => m.activo).map((m, i) => (
+            {miembros.map((m, i) => (
               <StaffCard key={i} miembro={m} />
             ))}
           </div>
@@ -83,7 +86,7 @@ export default function CommunityPage() {
             ))}
           </div>
           <div className="flex flex-col gap-4 max-w-[800px] mx-auto mb-10">
-            {s.infoComunidad.faq.map((f, i) => (
+            {faqList.map((f, i) => (
               <div key={i} className="bg-bg-card border border-gray-700 rounded-xl p-4 text-left">
                 <h4 className="text-neon-cyan m-0 mb-1 text-lg">
                   <i className="far fa-question-circle" /> {f.p}

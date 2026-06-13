@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { config } from '../data/config'
+import { loadEvento } from '../data/dataLoader'
 
 // --- Types ---
 interface Game {
@@ -176,7 +176,7 @@ function RSSSection({ url }: { url: string }) {
 
 // --- Event Hero ---
 function EventHero() {
-  const e = config.evento
+  const e = loadEvento()
   if (!e.activo) return null
 
   const startDate = new Date(e.fechaInicio)
