@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: calc(90px + env(safe-area-inset-bottom));
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f0f15;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}
+
+@layer components {
+  .section-title {
+    @apply text-neon-cyan text-2xl uppercase tracking-widest border-b-2 border-gray-700 pb-2 inline-block relative mb-8;
+    text-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+  }
+  .section-title:hover {
+    text-shadow: 2px 0 #ff0055, -2px 0 #00ffcc;
+  }
+
+  .card {
+    @apply bg-bg-card rounded-xl overflow-hidden border border-gray-700 transition-all duration-300 flex flex-col w-full;
+    flex: 0 1 300px;
+  }
+  .card:hover {
+    @apply border-neon-cyan;
+    transform: translateY(-5px);
+  }
+
+  .btn-action {
+    @apply block w-full py-2.5 px-4 border border-neon-cyan text-neon-cyan rounded-lg font-bold mt-2.5 cursor-pointer bg-transparent text-center transition-all duration-300;
+  }
+  .btn-action:hover {
+    @apply bg-neon-cyan text-black;
+  }
+
+  .filter-btn {
+    @apply bg-transparent border border-gray-600 text-gray-400 px-4 py-1.5 rounded-full cursor-pointer text-sm transition-all duration-300;
+  }
+  .filter-btn.active {
+    @apply border-neon-cyan text-neon-cyan;
+    background: rgba(0, 255, 204, 0.1);
+  }
+
+  .gallery-grid {
+    columns: 2 200px;
+    column-gap: 15px;
+  }
+  .gallery-item {
+    @apply mb-4 break-inside-avoid rounded-xl overflow-hidden border border-gray-700 cursor-zoom-in transition-transform duration-200;
+  }
+  .gallery-item:hover {
+    @apply border-neon-cyan;
+    transform: scale(1.02);
+  }
+}
