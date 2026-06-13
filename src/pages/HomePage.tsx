@@ -198,7 +198,8 @@ function groupAnimeByDay(data: Anime[]): Record<string, Anime[]> {
   grouped.unknown = []
 
   for (const anime of data) {
-    const day = (anime as any).broadcast?.day?.toLowerCase()
+    // Jikan returns days in plural ("Sundays", "Mondays"), normalize by removing trailing 's'
+    const day = (anime as any).broadcast?.day?.toLowerCase().replace(/s$/, '')
     if (day && grouped[day]) {
       grouped[day].push(anime)
     } else {
