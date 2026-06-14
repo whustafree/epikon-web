@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { adminStore } from '../data/adminStore'
 import { clearDataCache } from '../data/dataLoader'
+import { validateAllAdminData, type ValidationError } from '../data/validation'
 import type { Miembro, FAQ, Mascota } from '../data/config'
 
 const ADMIN_PASSWORD = 'epikon2025'
@@ -11,6 +12,8 @@ export default function AdminPage() {
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'evento' | 'staff' | 'faq' | 'galeria' | 'ajustes' | 'sorteo'>('evento')
   const [saved, setSaved] = useState(false)
+  const [errors, setErrors] = useState<ValidationError[]>([])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Evento state
   const [evento, setEvento] = useState(adminStore.load().evento)
@@ -49,6 +52,13 @@ export default function AdminPage() {
   }
 
   const handleSave = () => {
+    // Validate before saving
+    const validationErrors = validateAllAdminData({ evento, redes, imagenes, musica, mascota, sorteo })
+    if (validationErrors.length > 0) {
+      setErrors(validationErrors)
+      return
+    }
+    setErrors([])
     adminStore.save({
       evento,
       equipo: staff,
@@ -67,6 +77,45 @@ export default function AdminPage() {
     clearDataCache()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
+  }
+
+  // Export data as JSON file
+  const handleExport = () => {
+    const data = adminStore.load()
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `epikon-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // Import data from JSON file
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string)
+        // Validate that it has the required fields
+        if (!data.evento || !data.equipo) {
+          alert('El archivo JSON no tiene el formato esperado. Debe contener evento y equipo.')
+          return
+        }
+        adminStore.save(data)
+        clearDataCache()
+        window.location.reload()
+      } catch {
+        alert('Error al leer el archivo JSON. Verifica que sea un archivo válido.')
+      }
+    }
+    reader.readAsText(file)
+    // Reset input so the same file can be re-imported
+    e.target.value = ''
   }
 
   // Staff management
@@ -526,6 +575,20 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* Validation Errors */}
+      {errors.length > 0 && (
+        <div className="max-w-lg mx-auto mb-6 bg-red-900/30 border border-red-500/50 rounded-xl p-4">
+          <h3 className="text-red-400 text-sm font-bold mb-2 flex items-center gap-2">
+            <i className="fas fa-exclamation-triangle" /> Errores de validación
+          </h3>
+          <ul className="list-disc list-inside text-red-300 text-xs space-y-1">
+            {errors.map((err, i) => (
+              <li key={i}>{err.message}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Save Button */}
       <div className="text-center my-8">
         <button onClick={handleSave}
@@ -534,16 +597,30 @@ export default function AdminPage() {
         </button>
         <p className="text-gray-500 text-sm mt-2">Los datos se guardan en localStorage del navegador</p>
 
-        <button onClick={() => {
-          if (confirm('¿Restablecer valores por defecto? Se perderán todos tus cambios.')) {
-            adminStore.clear()
-            clearDataCache()
-            window.location.reload()
-          }
-        }}
-          className="mt-4 px-6 py-2 bg-red-900/30 border border-red-700/50 text-red-400 text-sm rounded-xl hover:bg-red-900/50 transition-all">
-          <i className="fas fa-undo-alt" /> Restablecer valores por defecto
-        </button>
+        <div className="flex justify-center gap-3 mt-4 flex-wrap">
+          {/* Export */}
+          <button onClick={handleExport}
+            className="px-5 py-2 bg-blue-900/30 border border-blue-700/50 text-blue-400 text-sm rounded-xl hover:bg-blue-900/50 transition-all flex items-center gap-2">
+            <i className="fas fa-download" /> Exportar respaldo JSON
+          </button>
+          {/* Import */}
+          <button onClick={() => fileInputRef.current?.click()}
+            className="px-5 py-2 bg-green-900/30 border border-green-700/50 text-green-400 text-sm rounded-xl hover:bg-green-900/50 transition-all flex items-center gap-2">
+            <i className="fas fa-upload" /> Importar respaldo JSON
+          </button>
+          <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
+          {/* Reset */}
+          <button onClick={() => {
+            if (confirm('¿Restablecer valores por defecto? Se perderán todos tus cambios.')) {
+              adminStore.clear()
+              clearDataCache()
+              window.location.reload()
+            }
+          }}
+            className="px-5 py-2 bg-red-900/30 border border-red-700/50 text-red-400 text-sm rounded-xl hover:bg-red-900/50 transition-all flex items-center gap-2">
+            <i className="fas fa-undo-alt" /> Restablecer valores por defecto
+          </button>
+        </div>
       </div>
     </div>
   )
