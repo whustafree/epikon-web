@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { loadRedes, loadImagenes } from '../../data/dataLoader'
 import { useTheme } from '../../contexts/ThemeContext'
+import { useLanguage } from '../../contexts/LanguageContext'
 import Particles from '../ui/Particles'
 import Mascot from '../ui/Mascot'
 import MusicPlayer from '../ui/MusicPlayer'
@@ -31,6 +32,7 @@ export default function Layout({ children }: LayoutProps) {
   const logoClickRef = useRef(0)
 
   const { theme, toggleTheme } = useTheme()
+  const { t, locale, setLocale } = useLanguage()
 
   const handleLogoClick = () => {
     logoClickRef.current++
@@ -107,8 +109,13 @@ export default function Layout({ children }: LayoutProps) {
                 {item.label}
               </button>
             ))}
+            {/* Language selector */}
+            <button onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+              className="theme-toggle ml-1" title={locale === 'es' ? 'English' : 'Español'}>
+              <span className="text-xs font-bold">{locale === 'es' ? 'EN' : 'ES'}</span>
+            </button>
             {/* Theme toggle */}
-            <button onClick={toggleTheme} className="theme-toggle ml-1" title={theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
+            <button onClick={toggleTheme} className="theme-toggle ml-1" title={theme === 'dark' ? t('nav.modoClaro') : t('nav.modoOscuro')}>
               <i className={`fas ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
             </button>
             <a
@@ -135,7 +142,7 @@ export default function Layout({ children }: LayoutProps) {
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="text-white text-2xl bg-none border-none cursor-pointer p-1"
-            aria-label="Menú"
+            aria-label={t('nav.menu')}
           >
             <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`} />
           </button>
@@ -158,11 +165,17 @@ export default function Layout({ children }: LayoutProps) {
                 {item.label}
               </button>
             ))}
+            {/* Language selector in mobile */}
+            <button onClick={() => setLocale(locale === 'es' ? 'en' : 'es')}
+              className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-semibold border-b border-gray-800 text-gray-400 hover:text-white hover:bg-white/5 transition-all">
+              <i className="fas fa-globe w-5 text-center" />
+              {locale === 'es' ? 'English' : 'Español'}
+            </button>
             {/* Theme toggle in mobile */}
             <button onClick={toggleTheme}
               className="w-full flex items-center gap-3 px-5 py-3.5 text-sm font-semibold border-b border-gray-800 text-gray-400 hover:text-white hover:bg-white/5 transition-all">
               <i className={`fas w-5 text-center ${theme === 'dark' ? 'fa-sun' : 'fa-moon'}`} />
-              {theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+              {theme === 'dark' ? t('nav.modoClaro') : t('nav.modoOscuro')}
             </button>
             <a
               href={redes.instagram}

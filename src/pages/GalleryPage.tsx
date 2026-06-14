@@ -1,34 +1,36 @@
 import { useState } from 'react'
 import { loadGaleriaActual, loadGaleriaAnterior } from '../data/dataLoader'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export default function GalleryPage() {
   const [type, setType] = useState<'actual' | 'anterior'>('actual')
   const [lightbox, setLightbox] = useState<string | null>(null)
+  const { t } = useLanguage()
 
   const photos = type === 'actual' ? loadGaleriaActual() : loadGaleriaAnterior()
 
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
-      <h2 className="section-title">📸 Galería Epikon</h2>
+      <h2 className="section-title">{t('galeria.titulo')}</h2>
 
       <div className="flex justify-center gap-2.5 mb-5 flex-wrap">
         <button onClick={() => setType('actual')}
           className={`filter-btn ${type === 'actual' ? 'active' : ''}`}>
-          EVENTO ACTUAL
+          {t('galeria.eventoActual')}
         </button>
         <button onClick={() => setType('anterior')}
           className={`filter-btn ${type === 'anterior' ? 'active' : ''}`}>
-          PASADOS
+          {t('galeria.pasados')}
         </button>
       </div>
 
       {photos.length === 0 ? (
-        <p className="text-gray-500">No hay fotos disponibles.</p>
+        <p className="text-gray-500">{t('galeria.noFotos')}</p>
       ) : (
         <div className="gallery-grid">
           {photos.map((url, i) => (
             <div key={i} className="gallery-item" onClick={() => setLightbox(url)}>
-              <img src={url} loading="lazy" alt={`Foto ${i + 1}`} className="w-full block" />
+              <img src={url} loading="lazy" alt={`${t('galeria.foto')} ${i + 1}`} className="w-full block" />
             </div>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { loadEvento } from '../data/dataLoader'
+import { useLanguage } from '../contexts/LanguageContext'
 
 // ==================== TYPES ====================
 interface Game {
@@ -32,6 +33,7 @@ function Card({ img, title, meta, link, linkText }: {
   img: string; title: string; meta?: React.ReactNode; link: string; linkText?: string
 }) {
   const [imgError, setImgError] = useState(false)
+  const { t } = useLanguage()
   return (
     <div className="card group">
       <div className="relative overflow-hidden">
@@ -48,7 +50,7 @@ function Card({ img, title, meta, link, linkText }: {
         <div className="font-bold text-sm leading-tight mb-2 line-clamp-2">{title}</div>
         {meta && <div className="text-[11px] text-gray-400 mb-1">{meta}</div>}
         <a href={link} target="_blank" rel="noopener noreferrer" className="btn-action mt-auto">
-          {linkText || 'ABRIR'}
+          {linkText || t('home.abrir')}
         </a>
       </div>
     </div>
@@ -61,6 +63,7 @@ function GamesSection() {
   const [filter, setFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     let cancelled = false
@@ -109,11 +112,11 @@ function GamesSection() {
     return (
       <div className="text-center p-6 border border-dashed border-red-500/50 rounded-xl bg-red-500/5 max-w-lg mx-auto">
         <i className="fas fa-shield-alt text-3xl text-red-500 mb-3" />
-        <h3 className="text-red-400 font-bold m-0">Juegos no disponibles</h3>
-        <p className="text-gray-400 text-sm mt-1 mb-4">No se pudieron cargar los juegos. Intenta desactivar el bloqueador para este sitio.</p>
+        <h3 className="text-red-400 font-bold m-0">{t('home.juegosNoDisponibles')}</h3>
+        <p className="text-gray-400 text-sm mt-1 mb-4">{t('home.juegosError')}</p>
         <a href="https://www.gamerpower.com/giveaways" target="_blank" rel="noopener noreferrer"
           className="inline-block px-6 py-2.5 bg-neon-pink text-white rounded-lg font-bold text-sm no-underline hover:brightness-110 transition-all">
-          VER EN GAMERPOWER <i className="fas fa-external-link-alt ml-1" />
+          {t('home.verGamerPower')} <i className="fas fa-external-link-alt ml-1" />
         </a>
       </div>
     )
@@ -126,18 +129,18 @@ function GamesSection() {
           <button key={f} onClick={() => setFilter(f)}
             className={`filter-btn ${filter === f ? 'active' : ''}`}
           >
-            {f === 'all' ? 'TODOS' : f.toUpperCase()}
+            {f === 'all' ? t('home.todos') : f.toUpperCase()}
           </button>
         ))}
       </div>
       {filtered.length === 0 ? (
-        <p className="text-gray-500 text-center">No hay juegos gratis para este filtro.</p>
+        <p className="text-gray-500 text-center">{t('home.noJuegos')}</p>
       ) : (
         <div className="grid-base">
           {filtered.map((g, i) => (
             <Card key={i} img={g.image} title={g.title}
               meta={`${g.platforms}${g.description ? ' · ' + g.description.substring(0, 60) + '…' : ''}`}
-              link={g.open_giveaway_url} linkText="GRATIS"
+              link={g.open_giveaway_url} linkText={t('home.gratis')}
             />
           ))}
         </div>
@@ -147,14 +150,14 @@ function GamesSection() {
 }
 
 // ==================== ANIME SCHEDULE BY DAY ====================
-const DAYS: { en: string; es: string }[] = [
-  { en: 'monday', es: 'LUNES' },
-  { en: 'tuesday', es: 'MARTES' },
-  { en: 'wednesday', es: 'MIÉRCOLES' },
-  { en: 'thursday', es: 'JUEVES' },
-  { en: 'friday', es: 'VIERNES' },
-  { en: 'saturday', es: 'SÁBADO' },
-  { en: 'sunday', es: 'DOMINGO' },
+const DAYS: { en: string; es: string; tKey: string }[] = [
+  { en: 'monday', es: 'LUNES', tKey: 'home.lunes' },
+  { en: 'tuesday', es: 'MARTES', tKey: 'home.martes' },
+  { en: 'wednesday', es: 'MIÉRCOLES', tKey: 'home.miercoles' },
+  { en: 'thursday', es: 'JUEVES', tKey: 'home.jueves' },
+  { en: 'friday', es: 'VIERNES', tKey: 'home.viernes' },
+  { en: 'saturday', es: 'SÁBADO', tKey: 'home.sabado' },
+  { en: 'sunday', es: 'DOMINGO', tKey: 'home.domingo' },
 ]
 
 const DAY_MAP: Record<string, string> = Object.fromEntries(DAYS.map(d => [d.en, d.es]))
@@ -218,6 +221,7 @@ function AnimeSchedule() {
   const [isCached, setIsCached] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [refreshing, setRefreshing] = useState(false)
+  const { t } = useLanguage()
 
   const cancelledRef = useRef(false)
 
@@ -324,19 +328,19 @@ function AnimeSchedule() {
     return (
       <div className="text-center p-6 border border-dashed border-yellow-500/50 rounded-xl bg-yellow-500/5 max-w-lg mx-auto">
         <i className="fas fa-exclamation-triangle text-3xl text-yellow-500 mb-3" />
-        <h3 className="text-yellow-400 font-bold m-0">Calendario no disponible</h3>
+        <h3 className="text-yellow-400 font-bold m-0">{t('home.calendarioNoDisponible')}</h3>
         <p className="text-gray-400 text-sm mt-2">
-          No se pudo cargar el calendario de anime.{' '}
-          {navigator.onLine === false && 'Parece que no tienes conexión a internet.'}
+          {t('home.calendarioError')}{' '}
+          {navigator.onLine === false && t('home.sinConexion')}
         </p>
         <div className="flex justify-center gap-2 mt-4">
           <button onClick={handleRefresh}
             className="px-5 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all flex items-center gap-1.5">
-            <i className="fas fa-sync-alt" /> REINTENTAR
+            <i className="fas fa-sync-alt" /> {t('home.reintentar')}
           </button>
           <button onClick={() => { setError(false); setLoading(true); doFetch() }}
             className="px-5 py-2 bg-gray-700 text-white rounded-lg text-sm font-bold cursor-pointer hover:brightness-110 transition-all">
-            <i className="fas fa-redo" /> FORZAR CARGA
+            <i className="fas fa-redo" /> {t('home.forzarCarga')}
           </button>
         </div>
       </div>
@@ -350,13 +354,13 @@ function AnimeSchedule() {
       <div className="flex flex-wrap items-center justify-center gap-3 mb-4">
         {isCached && (
           <span className="text-[10px] bg-green-900/40 text-green-400 px-2.5 py-1 rounded-full border border-green-700/30 flex items-center gap-1">
-            <i className="fas fa-database text-[9px]" /> Cacheado hoy
+            <i className="fas fa-database text-[9px]" /> {t('home.cacheadoHoy')}
           </span>
         )}
         <button onClick={handleRefresh} disabled={refreshing}
           className="text-[10px] bg-gray-800/50 text-gray-400 px-2.5 py-1 rounded-full hover:text-white hover:bg-gray-700/50 transition-all disabled:opacity-50 flex items-center gap-1">
           <i className={`fas fa-sync-alt ${refreshing ? 'animate-spin' : ''}`} />{' '}
-          {refreshing ? 'Actualizando…' : 'Refrescar'}
+          {refreshing ? t('home.actualizando') : t('home.refrescar')}
         </button>
       </div>
 
@@ -370,7 +374,7 @@ function AnimeSchedule() {
                 : 'bg-gray-800/50 text-gray-400 hover:text-white hover:bg-gray-700/50'
             }`}
           >
-            {d.es} <span className="opacity-60">({(byDay[d.en] || []).length})</span>
+            {t(d.tKey)} <span className="opacity-60">({(byDay[d.en] || []).length})</span>
           </button>
         ))}
       </div>
@@ -381,7 +385,7 @@ function AnimeSchedule() {
           <i className="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs" />
           <input
             type="text"
-            placeholder="Buscar anime por nombre…"
+            placeholder={t('home.buscarAnime')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className="w-full bg-gray-800/50 border border-gray-700/50 rounded-full pl-8 pr-4 py-2 text-sm text-white placeholder-gray-500 outline-none focus:border-neon-cyan/50 transition-all"
@@ -396,18 +400,18 @@ function AnimeSchedule() {
       )}
 
       {total === 0 ? (
-        <p className="text-gray-500 text-center">No hay animes en emisión esta temporada.</p>
+        <p className="text-gray-500 text-center">{t('home.noAnimes')}</p>
       ) : filteredAnimes.length === 0 ? (
         <p className="text-gray-500 text-center">
           {searchTerm
-            ? `No se encontró "${searchTerm}" en ${DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.`
-            : `No hay animes programados para ${DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}.`}
+            ? `${t('home.noEncontrado')} "${searchTerm}" ${t('home.en')} ${DAY_MAP[selectedDay]?.toLowerCase() || t('home.esteDia')}.`
+            : `${t('home.noProgramados')} ${DAY_MAP[selectedDay]?.toLowerCase() || t('home.esteDia')}.`}
         </p>
       ) : (
         <>
           <p className="text-gray-500 text-xs text-center mb-4">
-            {filteredAnimes.length} de {currentAnimes.length} animes en {DAY_MAP[selectedDay]?.toLowerCase() || 'este día'}
-            {' — '}{total} en total
+            {filteredAnimes.length} {t('home.de')} {currentAnimes.length} {t('home.animes')} {t('home.en')} {DAY_MAP[selectedDay]?.toLowerCase() || t('home.esteDia')}
+            {' — '}{total} {t('home.enTotal')}
           </p>
           <div className="grid-base">
             {filteredAnimes.map((a, i) => (
@@ -451,6 +455,7 @@ function RSSSection({ url, title, icon }: { url: string; title: string; icon: st
   const [items, setItems] = useState<RSSItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     let cancelled = false
@@ -491,8 +496,8 @@ function RSSSection({ url, title, icon }: { url: string; title: string; icon: st
     return (
       <div className="text-center p-6 border border-dashed border-gray-700 rounded-xl bg-gray-800/20 max-w-lg mx-auto">
         <i className={`fas ${icon} text-2xl text-gray-500 mb-2`} />
-        <p className="text-gray-500 text-sm">Noticias no disponibles en este momento.</p>
-        <p className="text-gray-600 text-xs mt-1">Puedes revisar directamente en las fuentes.</p>
+        <p className="text-gray-500 text-sm">{t('home.noticiasNoDisponibles')}</p>
+        <p className="text-gray-600 text-xs mt-1">{t('home.revisaFuentes')}</p>
       </div>
     )
   }
@@ -506,7 +511,7 @@ function RSSSection({ url, title, icon }: { url: string; title: string; icon: st
           item.description?.match(/<img[^>]+src="([^">]+)"/)?.[1] ||
           'https://placehold.co/600x400/1a1a24/00ffcc?text=' + encodeURIComponent(title)
         return (
-          <Card key={i} img={img} title={item.title} link={item.link} linkText="LEER" />
+          <Card key={i} img={img} title={item.title} link={item.link} linkText={t('home.leer')} />
         )
       })}
     </div>
@@ -516,6 +521,7 @@ function RSSSection({ url, title, icon }: { url: string; title: string; icon: st
 // ==================== EVENT HERO ====================
 function EventHero() {
   const e = loadEvento()
+  const { t } = useLanguage()
   if (!e.activo) return null
 
   const startDate = new Date(e.fechaInicio)
@@ -535,8 +541,8 @@ function EventHero() {
         .catch(() => {})
     } else {
       navigator.clipboard?.writeText(window.location.href)
-        .then(() => alert('Link copiado al portapapeles'))
-        .catch(() => alert('Comparte este link con tus amigos'))
+        .then(() => alert(t('home.linkCopiado')))
+        .catch(() => alert(t('home.comparteLink')))
     }
   }
 
@@ -563,17 +569,17 @@ function EventHero() {
         <div className="flex gap-2.5 flex-wrap">
           <button onClick={addToCalendar}
             className="flex-1 min-w-[120px] py-3 px-4 bg-neon-cyan text-black border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
-            <i className="far fa-calendar-plus" /> AGENDAR
+            <i className="far fa-calendar-plus" /> {t('home.agendar')}
           </button>
           {e.mapaLink && (
             <a href={e.mapaLink} target="_blank" rel="noopener noreferrer"
               className="flex-1 min-w-[120px] py-3 px-4 bg-gray-800 border border-gray-600 text-white rounded-lg font-bold no-underline flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
-              <i className="fas fa-map" /> MAPA
+              <i className="fas fa-map" /> {t('home.mapa')}
             </a>
           )}
           <button onClick={shareEvent}
             className="flex-1 min-w-[120px] py-3 px-4 bg-neon-pink text-white border-none rounded-lg font-bold cursor-pointer flex items-center justify-center gap-2 text-sm hover:brightness-110 hover:-translate-y-0.5 transition-all">
-            <i className="fas fa-share-alt" /> COMPARTIR
+            <i className="fas fa-share-alt" /> {t('home.compartir')}
           </button>
         </div>
       </div>
@@ -583,6 +589,7 @@ function EventHero() {
 
 // ==================== MAIN PAGE ====================
 export default function HomePage() {
+  const { t } = useLanguage()
   return (
     <div className="px-5 max-w-6xl mx-auto">
       <EventHero />
@@ -590,7 +597,7 @@ export default function HomePage() {
       {/* Games */}
       <section className="mb-12">
         <h2 className="section-title">
-          <i className="fas fa-gift text-neon-pink mr-2" /> Juegos Gratis
+          <i className="fas fa-gift text-neon-pink mr-2" /> {t('home.juegosGratis')}
         </h2>
         <GamesSection />
       </section>
@@ -598,10 +605,10 @@ export default function HomePage() {
       {/* Anime Schedule */}
       <section className="mb-12">
         <h2 className="section-title">
-          <i className="fas fa-calendar-week text-neon-pink mr-2" /> Calendario Anime
+          <i className="fas fa-calendar-week text-neon-pink mr-2" /> {t('home.calendarioAnime')}
         </h2>
         <p className="text-gray-500 text-sm text-center mb-4 -mt-4">
-          Animes en emisión organizados por día de estreno
+          {t('home.animeDesc')}
         </p>
         <AnimeSchedule />
       </section>
@@ -609,17 +616,17 @@ export default function HomePage() {
       {/* Anime News */}
       <section className="mb-12">
         <h2 className="section-title">
-          <i className="fas fa-newspaper text-neon-pink mr-2" /> Noticias Anime
+          <i className="fas fa-newspaper text-neon-pink mr-2" /> {t('home.noticiasAnime')}
         </h2>
-        <RSSSection url="https://somoskudasai.com/noticias/feed/" title="Anime News" icon="fa-newspaper" />
+        <RSSSection url="https://somoskudasai.com/noticias/feed/" title={t('home.noticiasAnime')} icon="fa-newspaper" />
       </section>
 
       {/* Geek News */}
       <section className="mb-12">
         <h2 className="section-title">
-          <i className="fas fa-satellite-dish text-neon-pink mr-2" /> Radar Geek
+          <i className="fas fa-satellite-dish text-neon-pink mr-2" /> {t('home.radarGeek')}
         </h2>
-        <RSSSection url="https://latam.ign.com/feed.xml" title="Radar Geek" icon="fa-satellite-dish" />
+        <RSSSection url="https://latam.ign.com/feed.xml" title={t('home.radarGeek')} icon="fa-satellite-dish" />
       </section>
     </div>
   )

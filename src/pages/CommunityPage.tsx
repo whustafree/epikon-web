@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react'
 import { loadEquipo, loadFaq, loadSorteo, loadInstagramFeed, loadCosplayGallery, loadInfoComunidad } from '../data/dataLoader'
+import { useLanguage } from '../contexts/LanguageContext'
 
 function SorteoSection() {
   const s = loadSorteo()
   const [timeLeft, setTimeLeft] = useState('')
+  const { t } = useLanguage()
 
   useEffect(() => {
     const end = new Date(s.fechaTermino).getTime()
@@ -20,17 +22,18 @@ function SorteoSection() {
 
   return (
     <div className="bg-gradient-to-br from-[#2a0a38] to-bg-dark border-2 border-neon-cyan rounded-2xl p-5 mx-auto mb-10 max-w-[600px] flex flex-wrap items-center justify-center gap-5">
-      <img src={s.imgPremio} alt="Premio" className="w-[120px] h-[120px] object-cover rounded-xl" />
+      <img src={s.imgPremio} alt={t('comunidad.sorteo')} className="w-[120px] h-[120px] object-cover rounded-xl" />
       <div>
         <h3 className="text-white m-0">{s.titulo}</h3>
         <div className="font-mono text-2xl text-neon-cyan font-bold my-4">{timeLeft || '...'}</div>
-        <button onClick={() => alert('¡Participando!')} className="btn-action">PARTICIPAR</button>
+        <button onClick={() => alert(t('comunidad.participando'))} className="btn-action">{t('comunidad.participar')}</button>
       </div>
     </div>
   )
 }
 
 function StaffCard({ miembro }: { miembro: { activo: boolean; nombre: string; rol: string; foto: string; link: string } }) {
+  const { t } = useLanguage()
   return (
     <div className="card items-center text-center">
       <div className="p-5 flex flex-col items-center">
@@ -41,7 +44,7 @@ function StaffCard({ miembro }: { miembro: { activo: boolean; nombre: string; ro
         <h3 className="text-white m-1">{miembro.nombre}</h3>
         <div className="text-gray-400 text-sm italic mb-2.5">{miembro.rol}</div>
         <a href={miembro.link} target="_blank" rel="noopener noreferrer" className="btn-action text-xs">
-          <i className="fas fa-link" /> CONECTAR
+          <i className="fas fa-link" /> {t('comunidad.conectar')}
         </a>
       </div>
     </div>
@@ -55,13 +58,14 @@ export default function CommunityPage() {
   const instagramFeed = loadInstagramFeed()
   const cosplayGallery = loadCosplayGallery()
   const infoComunidad = loadInfoComunidad()
+  const { t } = useLanguage()
 
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
       {/* Staff */}
       {miembros.length > 0 && (
         <>
-          <h2 className="section-title">🛡️ Staff Epikon</h2>
+          <h2 className="section-title">{t('comunidad.staff')}</h2>
           <div className="grid-base mb-10">
             {miembros.map((m, i) => (
               <StaffCard key={i} miembro={m} />
@@ -103,7 +107,7 @@ export default function CommunityPage() {
       {/* Instagram Feed */}
       {instagramFeed.activo && (
         <>
-          <h2 className="section-title">📸 Feed Instagram</h2>
+          <h2 className="section-title">{t('comunidad.feedInstagram')}</h2>
           <div className="grid-base mb-10">
             {instagramFeed.posts.filter(p => p.activo).slice(0, 4).map((post, i) => {
               const isVideo = post.foto.endsWith('.mp4')
@@ -131,14 +135,14 @@ export default function CommunityPage() {
       {/* Cosplay Gallery */}
       {cosplayGallery.activo && (
         <>
-          <h2 className="section-title">👥 Cosplayers</h2>
+          <h2 className="section-title">{t('comunidad.cosplayers')}</h2>
           <div className="grid-base">
             {cosplayGallery.list.filter(i => i.activo).map((item, i) => (
               <div key={i} className="card">
                 <img src={item.foto} alt={item.usuario} className="w-full h-[300px] object-cover" />
                 <div className="p-4">
                   <span className="font-bold">{item.usuario}</span>
-                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="btn-action">SEGUIR</a>
+                  <a href={item.url} target="_blank" rel="noopener noreferrer" className="btn-action">{t('comunidad.seguir')}</a>
                 </div>
               </div>
             ))}

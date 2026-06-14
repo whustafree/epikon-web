@@ -2,6 +2,7 @@ import { useState, useRef } from 'react'
 import { adminStore } from '../data/adminStore'
 import { clearDataCache } from '../data/dataLoader'
 import { validateAllAdminData, type ValidationError } from '../data/validation'
+import { useLanguage } from '../contexts/LanguageContext'
 import type { Miembro, FAQ, Mascota } from '../data/config'
 
 const ADMIN_PASSWORD = 'epikon2025'
@@ -14,6 +15,7 @@ export default function AdminPage() {
   const [saved, setSaved] = useState(false)
   const [errors, setErrors] = useState<ValidationError[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { t } = useLanguage()
 
   // Evento state
   const [evento, setEvento] = useState(adminStore.load().evento)
@@ -178,11 +180,11 @@ export default function AdminPage() {
       <div className="min-h-[60vh] flex items-center justify-center px-5">
         <div className="bg-bg-card border border-gray-700 rounded-2xl p-8 max-w-md w-full">
           <h1 className="text-2xl text-neon-cyan text-center mb-6">
-            <i className="fas fa-lock" /> Admin EPIKON
+            <i className="fas fa-lock" /> {t('admin.loginTitle')}
           </h1>
           <input
             type="password"
-            placeholder="Contraseña"
+            placeholder={t('admin.loginPlaceholder')}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -191,7 +193,7 @@ export default function AdminPage() {
           {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
           <button onClick={handleLogin}
             className="w-full py-3 bg-neon-cyan text-black font-bold rounded-lg hover:brightness-110 transition-all">
-            INGRESAR
+            {t('admin.loginButton')}
           </button>
         </div>
       </div>
@@ -201,25 +203,25 @@ export default function AdminPage() {
   return (
     <div className="px-5 max-w-[1200px] mx-auto">
       <h1 className="section-title">
-        <i className="fas fa-cog" /> Panel Admin EPIKON
+        <i className="fas fa-cog" /> {t('admin.panelTitle')}
       </h1>
 
       {/* Tabs */}
       <div className="flex justify-center gap-2 flex-wrap mb-8">
-        {(['evento', 'staff', 'faq', 'galeria', 'ajustes', 'sorteo'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
+        {(['evento', 'staff', 'faq', 'galeria', 'ajustes', 'sorteo'] as const).map(tabKey => (
+          <button key={tabKey} onClick={() => setTab(tabKey)}
             className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${
-              tab === t
+              tab === tabKey
                 ? 'bg-neon-cyan text-black'
                 : 'bg-bg-card border border-gray-600 text-gray-400 hover:text-white'
             }`}
           >
-            {t === 'evento' && '📅 Evento'}
-            {t === 'staff' && '🛡️ Staff'}
-            {t === 'faq' && '❓ FAQ'}
-            {t === 'galeria' && '📸 Galería'}
-            {t === 'ajustes' && '⚙️ Ajustes'}
-            {t === 'sorteo' && '🎁 Sorteo'}
+            {tabKey === 'evento' && '📅 ' + t('admin.tabEvento')}
+            {tabKey === 'staff' && '🛡️ ' + t('admin.tabStaff')}
+            {tabKey === 'faq' && '❓ ' + t('admin.tabFaq')}
+            {tabKey === 'galeria' && '📸 ' + t('admin.tabGaleria')}
+            {tabKey === 'ajustes' && '⚙️ ' + t('admin.tabAjustes')}
+            {tabKey === 'sorteo' && '🎁 ' + t('admin.tabSorteo')}
           </button>
         ))}
       </div>
@@ -593,32 +595,32 @@ export default function AdminPage() {
       <div className="text-center my-8">
         <button onClick={handleSave}
           className="px-10 py-4 bg-gradient-to-r from-neon-cyan to-neon-pink text-white text-lg font-bold rounded-xl hover:brightness-110 transition-all shadow-lg">
-          <i className="fas fa-save" /> {saved ? '✓ GUARDADO' : 'GUARDAR CAMBIOS'}
+          <i className="fas fa-save" /> {saved ? t('admin.guardado') : t('admin.guardarCambios')}
         </button>
-        <p className="text-gray-500 text-sm mt-2">Los datos se guardan en localStorage del navegador</p>
+        <p className="text-gray-500 text-sm mt-2">{t('admin.localStorage')}</p>
 
         <div className="flex justify-center gap-3 mt-4 flex-wrap">
           {/* Export */}
           <button onClick={handleExport}
             className="px-5 py-2 bg-blue-900/30 border border-blue-700/50 text-blue-400 text-sm rounded-xl hover:bg-blue-900/50 transition-all flex items-center gap-2">
-            <i className="fas fa-download" /> Exportar respaldo JSON
+            <i className="fas fa-download" /> {t('admin.exportar')}
           </button>
           {/* Import */}
           <button onClick={() => fileInputRef.current?.click()}
             className="px-5 py-2 bg-green-900/30 border border-green-700/50 text-green-400 text-sm rounded-xl hover:bg-green-900/50 transition-all flex items-center gap-2">
-            <i className="fas fa-upload" /> Importar respaldo JSON
+            <i className="fas fa-upload" /> {t('admin.importar')}
           </button>
           <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           {/* Reset */}
           <button onClick={() => {
-            if (confirm('¿Restablecer valores por defecto? Se perderán todos tus cambios.')) {
+            if (confirm(t('admin.restablecerConfirm'))) {
               adminStore.clear()
               clearDataCache()
               window.location.reload()
             }
           }}
             className="px-5 py-2 bg-red-900/30 border border-red-700/50 text-red-400 text-sm rounded-xl hover:bg-red-900/50 transition-all flex items-center gap-2">
-            <i className="fas fa-undo-alt" /> Restablecer valores por defecto
+            <i className="fas fa-undo-alt" /> {t('admin.restablecer')}
           </button>
         </div>
       </div>
